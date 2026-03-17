@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1763989751673,
-      "tag": "0000_hard_wallflower",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1763990288090,
-      "tag": "0001_exotic_jigsaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1763990648064,
-      "tag": "0002_absurd_strong_guy",
+      "when": 1774034889044,
+      "tag": "0000_init",
       "breakpoints": true
     }
   ]

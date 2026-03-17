@@ -1,29 +1,46 @@
+import Link from 'next/link'
 import { type Device } from '@/lib/db/schema'
 import { DescriptionItem, Descriptions } from '../ui/descriptions'
-import { Card, CardContent } from '../ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 
 export type DeviceProps = {
   device: Device
+  templateName?: string
 }
 
 export function Device({
   device,
+  templateName,
 }: DeviceProps) {
   return (
-    <Card>
-      <CardContent>
-        <Descriptions>
-          <DescriptionItem label="名称">
-            {device.name}
-          </DescriptionItem>
-          <DescriptionItem label="描述">
-            {device.description || '-'}
-          </DescriptionItem>
-          <DescriptionItem label="型号">
-            {device.templateId}
-          </DescriptionItem>
-        </Descriptions>
-      </CardContent>
-    </Card>
+    <Link href={`/dashboard/devices/${device.id}`}>
+      <Card className='border-slate-800 bg-slate-900/60 transition-all hover:border-slate-700 hover:bg-slate-900 hover:shadow-lg'>
+        <CardHeader className='pb-2'>
+          <div className='flex items-center justify-between gap-2'>
+            <CardTitle className='truncate text-base text-white'>{device.name}</CardTitle>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+              device.isOnline
+                ? 'bg-emerald-500/15 text-emerald-400'
+                : 'bg-slate-700 text-slate-400'
+            }`}>
+              {device.isOnline ? '在线' : '离线'}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Descriptions>
+            <DescriptionItem label='设备 ID'>
+              {device.id}
+            </DescriptionItem>
+            <DescriptionItem label='描述'>
+              {device.description || '-'}
+            </DescriptionItem>
+            <DescriptionItem label='型号'>
+              {templateName ?? '-'}
+            </DescriptionItem>
+          </Descriptions>
+        </CardContent>
+      </Card>
+    </Link>
   )
 }

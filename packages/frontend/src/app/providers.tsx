@@ -1,4 +1,5 @@
 import { ThemeProvider } from '@/comps/theme-provider'
+import { Toaster } from '@/comps/ui/sonner'
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       {children}
+      <Toaster />
     </ThemeProvider>
   )
 }

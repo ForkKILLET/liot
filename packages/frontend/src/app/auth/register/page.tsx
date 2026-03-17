@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserRoundPlus } from 'lucide-react'
+import * as motion from 'framer-motion/client'
 import { FormProvider, useForm } from 'react-hook-form'
 
 import { InputField } from '@/comps/form/input-field'
@@ -63,97 +64,111 @@ export default function RegisterPage() {
 
   return (
     <SiteShell>
-      <Card>
-        <CardHeader className='pb-2 text-center'>
-          <CardTitle className='text-2xl text-white'>注册新 Liot 账户</CardTitle>
-        </CardHeader>
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+        className='py-16'
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.45 }}
+          className='mx-auto w-full max-w-md'
+        >
+          <Card className='border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/30 backdrop-blur'>
+            <CardHeader className='pb-2 text-center'>
+              <CardTitle className='text-2xl text-white'>注册新 Liot 账户</CardTitle>
+            </CardHeader>
 
-        <CardContent>
-          <FormProvider {...form}>
-            <form onSubmit={onSubmit} className='space-y-6'>
-              <InputField
-                name='email'
-                label='邮箱'
-                role='email'
-                rules={{
-                  required: '请输入邮箱地址',
-                  pattern: {
-                    value: emailPattern,
-                    message: '请输入有效的邮箱地址',
-                  },
-                }}
-              />
+            <CardContent>
+              <FormProvider {...form}>
+                <form onSubmit={onSubmit} className='space-y-6'>
+                  <InputField
+                    name='email'
+                    label='邮箱'
+                    role='email'
+                    rules={{
+                      required: '请输入邮箱地址',
+                      pattern: {
+                        value: emailPattern,
+                        message: '请输入有效的邮箱地址',
+                      },
+                    }}
+                  />
 
-              <InputField
-                name='name'
-                label='用户名'
-                role='username'
-                rules={{
-                  required: '请输入用户名',
-                  minLength: {
-                    value: 3,
-                    message: '用户名至少 3 个字符',
-                  },
-                  maxLength: {
-                    value: 20,
-                    message: '用户名最多 20 个字符',
-                  },
-                }}
-              />
+                  <InputField
+                    name='name'
+                    label='用户名'
+                    role='username'
+                    rules={{
+                      required: '请输入用户名',
+                      minLength: {
+                        value: 3,
+                        message: '用户名至少 3 个字符',
+                      },
+                      maxLength: {
+                        value: 20,
+                        message: '用户名最多 20 个字符',
+                      },
+                    }}
+                  />
 
-              <InputField
-                name='password'
-                label='密码'
-                role='password'
-                hint='至少 8 位字符'
-                rules={{
-                  required: '请输入密码',
-                  minLength: {
-                    value: 8,
-                    message: '密码至少 8 位字符',
-                  },
-                }}
-              />
+                  <InputField
+                    name='password'
+                    label='密码'
+                    role='password'
+                    hint='至少 8 位字符'
+                    rules={{
+                      required: '请输入密码',
+                      minLength: {
+                        value: 8,
+                        message: '密码至少 8 位字符',
+                      },
+                    }}
+                  />
 
-              <InputField
-                name='passwordConfirm'
-                label='确认密码'
-                role='password'
-                rules={{
-                  required: '请确认密码',
-                  validate: (value) => value === form.getValues('password') || '两次输入的密码不匹配',
-                }}
-              />
+                  <InputField
+                    name='passwordConfirm'
+                    label='确认密码'
+                    role='password'
+                    rules={{
+                      required: '请确认密码',
+                      validate: (value) => value === form.getValues('password') || '两次输入的密码不匹配',
+                    }}
+                  />
 
-              {form.formState.errors.root?.message && (
-                <p className='text-center text-sm text-destructive' role='alert'>
-                  {form.formState.errors.root.message}
-                </p>
-              )}
+                  {form.formState.errors.root?.message && (
+                    <p className='text-center text-sm text-destructive' role='alert'>
+                      {form.formState.errors.root.message}
+                    </p>
+                  )}
 
-              {serverMessage && (
-                <p className='text-center text-sm text-emerald-400' role='status'>
-                  {serverMessage}
-                </p>
-              )}
+                  {serverMessage && (
+                    <p className='text-center text-sm text-emerald-400' role='status'>
+                      {serverMessage}
+                    </p>
+                  )}
 
-              <SubmitButton
-                isPending={form.formState.isSubmitting || session.isPending}
-                icon={UserRoundPlus}
-              >
+                  <SubmitButton
+                    isPending={form.formState.isSubmitting || session.isPending}
+                    icon={UserRoundPlus}
+                  >
                 注册
-              </SubmitButton>
-            </form>
-          </FormProvider>
-        </CardContent>
+                  </SubmitButton>
+                </form>
+              </FormProvider>
+            </CardContent>
 
-        <CardFooter className='border-slate-800 text-sm text-slate-400'>
-          <p className='w-full text-center'>
+            <CardFooter className='border-slate-800 text-sm text-slate-400'>
+              <p className='w-full text-center'>
             已有账户？
-            <TextLink href='/auth/login'>登录</TextLink>
-          </p>
-        </CardFooter>
-      </Card>
+                <TextLink href='/auth/login'>登录</TextLink>
+              </p>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </motion.section>
     </SiteShell>
   )
 }

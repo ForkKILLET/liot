@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { LogIn } from 'lucide-react'
 import * as motion from 'framer-motion/client'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -20,20 +20,29 @@ interface LoginFormData {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+function normalizeNextPath(nextPath: string | null) {
+  if (! nextPath) return '/dashboard'
+  if (! nextPath.startsWith('/')) return '/dashboard'
+  if (nextPath.startsWith('//')) return '/dashboard'
+  return nextPath
+}
+
 export default function LoginPage() {
   const form = useForm<LoginFormData>({
     mode: 'onTouched',
   })
 
   const router = useRouter()
+  const searchParams = useSearchParams()
   const session = authClient.useSession()
   const [serverMessage, setServerMessage] = useState<string | null>(null)
+  const nextPath = normalizeNextPath(searchParams.get('next'))
 
   useEffect(() => {
     if (session.data) {
-      router.replace('/dashboard')
+      router.replace(nextPath)
     }
-  }, [session.data, router])
+  }, [session.data, router, nextPath])
 
   const onSubmit = form.handleSubmit(async (values) => {
     form.clearErrors()
@@ -47,7 +56,7 @@ export default function LoginPage() {
     }
 
     setServerMessage('登录成功，正在跳转...')
-    setTimeout(() => router.push('/dashboard'), 600)
+    setTimeout(() => router.push(nextPath), 600)
   })
 
   return (

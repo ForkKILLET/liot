@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('api-error')
 
 export function handleInternalError(error: unknown) {
-  console.error('Internal error:', error)
+  log.error({ error }, 'internal error')
 
   return NextResponse.json({
     success: false,

@@ -1,9 +1,8 @@
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import NextLink from 'next/link'
 import React from 'react'
-import { Button, ButtonProps, buttonVariants } from './button'
+import { Button, buttonVariants } from './button'
 import { VariantProps } from 'class-variance-authority'
-import { unless } from '@/lib/utils'
 
 type LinkProps = React.ComponentProps<'a'> & {
   href: string
@@ -15,7 +14,7 @@ export function Link({
   ...props
 }: LinkProps) {
   const isExternal = props.href?.match(/^(https?:)?\/\//)
-  const Icon = unless(icon, () => icon ?? (isExternal ? ArrowUpRight : ArrowRight))
+  const Icon = icon ?? (isExternal ? ArrowUpRight : ArrowRight)
   const LinkComp = isExternal ? 'a' : NextLink
 
   return (

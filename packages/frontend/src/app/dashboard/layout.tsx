@@ -1,34 +1,16 @@
-import { headers } from 'next/headers'
-import { LogIn } from 'lucide-react'
 import * as motion from 'framer-motion/client'
 
 import { SiteShell } from '@/comps/site-shell'
 import { UserMenu } from '@/comps/user-menu'
 import { DashboardSidebar } from '@/comps/dashboard/sidebar'
-import { auth } from '@/lib/auth/server'
-import { ButtonLink } from '@/comps/ui/link'
+import { requireSessionOrRedirect } from '@/lib/auth/server'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  })
-
-  if (! session) {
-    return (
-      <SiteShell>
-        <div className='flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center text-slate-300'>
-          <p>请先登录以访问控制台</p>
-          <ButtonLink href='/auth/login' icon={LogIn}>
-            前往登录
-          </ButtonLink>
-        </div>
-      </SiteShell>
-    )
-  }
+  await requireSessionOrRedirect('/dashboard')
 
   return (
     <SiteShell header={<UserMenu />}>

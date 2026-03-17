@@ -1,6 +1,7 @@
 import { count } from 'drizzle-orm'
 import { Db } from '.'
 import * as schema from './schema'
+import { validateDeviceTemplate } from '@/lib/device-templates/protocol'
 
 const defaultDeviceTemplates: schema.NewDeviceTemplate[] = [
   {
@@ -79,6 +80,13 @@ const defaultDeviceTemplates: schema.NewDeviceTemplate[] = [
 ]
 
 export async function initDb(db: Db) {
+  defaultDeviceTemplates.forEach((template) => {
+    const result = validateDeviceTemplate(template as schema.DeviceTemplate)
+    if (!result.valid) {
+      throw new Error(`defaultDeviceTemplates 校验失败(${template.name}): ${result.errors.join(', ')}`)
+    }
+  })
+
   const [{ count: deviceTemplateCount }] = await db
     .select({ count: count(schema.deviceTemplates) })
     .from(schema.deviceTemplates)

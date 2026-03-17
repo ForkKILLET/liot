@@ -1,7 +1,9 @@
 'use client'
 
 import { useForm, FormProvider } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { Save } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { DeviceTemplate } from '@/lib/db/schema'
 import { InputField } from '@/comps/form/input-field'
@@ -29,7 +31,13 @@ export function DeviceEditor({
     mode: 'onTouched',
   })
 
-  const handleSubmit = form.handleSubmit(onSave)
+  const router = useRouter()
+
+  const handleSubmit = form.handleSubmit(async (values) => {
+    await onSave(values)
+    toast.success('设备添加成功')
+    router.push('/dashboard/devices')
+  })
 
   return (
     <div

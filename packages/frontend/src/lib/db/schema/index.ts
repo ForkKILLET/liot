@@ -85,7 +85,40 @@ export const devices = pgTable('devices', {
   isOnline: boolean().default(false),
   state: json().notNull(),
   stateUpdatedAt: timestamp().defaultNow(),
+
+  deletedAt: timestamp(),
 })
 
 export type Device = typeof devices.$inferSelect
 export type NewDevice = typeof devices.$inferInsert
+
+export const deviceCommands = pgTable('device_commands', {
+  id: serial().primaryKey(),
+  deviceId: integer().references(() => devices.id).notNull(),
+  messageId: text().notNull(),
+  requestTopic: text().notNull(),
+  requestPayload: json().notNull(),
+  responseTopic: text(),
+  responsePayload: json(),
+  status: text().notNull().default('pending'),
+  error: text(),
+  createdBy: text().references(() => users.id).notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().$onUpdate(() => new Date()).notNull(),
+})
+
+export type DeviceCommand = typeof deviceCommands.$inferSelect
+export type NewDeviceCommand = typeof deviceCommands.$inferInsert
+
+export const deviceMessages = pgTable('device_messages', {
+  id: serial().primaryKey(),
+  deviceId: integer().references(() => devices.id),
+  direction: text().notNull(),
+  topic: text().notNull(),
+  payload: json().notNull(),
+  parsedMessageId: text(),
+  createdAt: timestamp().defaultNow().notNull(),
+})
+
+export type DeviceMessageRecord = typeof deviceMessages.$inferSelect
+export type NewDeviceMessageRecord = typeof deviceMessages.$inferInsert

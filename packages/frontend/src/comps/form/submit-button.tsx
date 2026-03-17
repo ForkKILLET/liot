@@ -1,8 +1,8 @@
 import { ArrowRight, LoaderCircle } from 'lucide-react'
-import React, { cloneElement } from 'react'
+import React from 'react'
 
 import { Button } from '@/comps/ui/button'
-import { cn, unless } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 export type SubmitButtonProps = React.ComponentProps<'button'> & {
   isPending?: boolean
@@ -15,7 +15,9 @@ export function SubmitButton({
   children,
   ...props
 }: SubmitButtonProps) {
-  const Icon = unless(icon, () => isPending ? LoaderCircle : icon ?? ArrowRight)
+  const Icon = icon === false
+    ? null
+    : isPending ? LoaderCircle : icon ?? ArrowRight
 
   return (
     <Button

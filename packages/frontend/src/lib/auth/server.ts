@@ -4,7 +4,7 @@ import { nextCookies } from 'better-auth/next-js'
 
 import { db, schema } from '@/lib/db'
 import { headers } from 'next/headers'
-import { unauthorized } from 'next/navigation'
+import { redirect, unauthorized } from 'next/navigation'
 
 export const auth = betterAuth({
   emailAndPassword: {
@@ -32,5 +32,22 @@ export async function getSession() {
 
 export async function getCurrentUser() {
   const { user } = await getSession()
+  return user
+}
+
+export async function requireSessionOrRedirect(nextPath = '/dashboard') {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (! session) {
+    redirect(`/auth/login?next=${encodeURIComponent(nextPath)}`)
+  }
+
+  return session
+}
+
+export async function requireUserOrRedirect(nextPath = '/dashboard') {
+  const { user } = await requireSessionOrRedirect(nextPath)
   return user
 }
