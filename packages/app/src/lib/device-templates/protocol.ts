@@ -92,6 +92,22 @@ function validateJsonTemplate(payload: JsonTemplate, path: string, errors: strin
     return
   }
 
+  if (payload.type === 'randomId') {
+    if (!Number.isInteger(payload.bits) || payload.bits <= 0) {
+      errors.push(`${path}.bits 必须是大于 0 的整数`)
+    }
+
+    if (payload.bits > 53) {
+      errors.push(`${path}.bits 不能大于 53（JavaScript Number 精度限制）`)
+    }
+    return
+  }
+
+  if (payload.type === 'pong') {
+    if (!payload.field?.trim()) errors.push(`${path}.field 不能为空`)
+    return
+  }
+
   if (payload.type === 'object') {
     if (!payload.properties || typeof payload.properties !== 'object') {
       errors.push(`${path}.properties 必须是对象`)
@@ -120,13 +136,60 @@ export function renderTopicTemplate(template: string, context: Record<string, st
   })
 }
 
+function getValueByPath(source: Record<string, unknown> | undefined, path: string) {
+  if (!source || !path.trim()) {
+    return undefined
+  }
+
+  const segments = path.split('.').filter(Boolean)
+  let current: unknown = source
+
+  for (const segment of segments) {
+    if (!current || typeof current !== 'object') {
+      return undefined
+    }
+
+    current = (current as Record<string, unknown>)[segment]
+  }
+
+  return current
+}
+
+function randomIntByBits(bits: number) {
+  const normalizedBits = Math.trunc(bits)
+
+  if (normalizedBits <= 0 || normalizedBits > 53) {
+    throw new Error(`invalid randomId bits: ${bits}`)
+  }
+
+  if (normalizedBits <= 32) {
+    return Math.floor(Math.random() * (2 ** normalizedBits))
+  }
+
+  const highBits = normalizedBits - 32
+  const high = Math.floor(Math.random() * (2 ** highBits))
+  const low = Math.floor(Math.random() * (2 ** 32))
+  return high * (2 ** 32) + low
+}
+
 export function renderPayloadTemplate(template: JsonTemplate, context: {
   fields?: Record<string, unknown>
+  requestPayload?: Record<string, unknown>
+  randomIntByBits?: (bits: number) => number
 } = {}): unknown {
   if (template.type === 'literal') return template.value
 
   if (template.type === 'field') {
-    return context.fields?.[template.field] ?? null
+    return getValueByPath(context.fields, template.field) ?? null
+  }
+
+  if (template.type === 'randomId') {
+    const randomInt = context.randomIntByBits ?? randomIntByBits
+    return randomInt(template.bits)
+  }
+
+  if (template.type === 'pong') {
+    return getValueByPath(context.requestPayload, template.field) ?? null
   }
 
   const result: Record<string, unknown> = {}

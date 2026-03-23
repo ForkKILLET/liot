@@ -13,6 +13,57 @@ import {
 } from '@/lib/device-templates/protocol'
 import { getMqttRuntime } from '@/lib/mqtt/runtime'
 
+type ResponsePayloadMatcher = {
+  path: string
+  value: unknown
+}
+
+function getValueByPath(source: Record<string, unknown>, path: string) {
+  if (!path.trim()) {
+    return undefined
+  }
+
+  const segments = path.split('.').filter(Boolean)
+  let current: unknown = source
+
+  for (const segment of segments) {
+    if (!current || typeof current !== 'object') {
+      return undefined
+    }
+
+    current = (current as Record<string, unknown>)[segment]
+  }
+
+  return current
+}
+
+function collectPongMatchers(
+  template: schema.JsonTemplate,
+  requestPayload: unknown,
+  path: string[] = []
+): ResponsePayloadMatcher[] {
+  if (!requestPayload || typeof requestPayload !== 'object') {
+    return [] as ResponsePayloadMatcher[]
+  }
+
+  if (template.type === 'pong') {
+    const value = getValueByPath(requestPayload as Record<string, unknown>, template.field)
+    if (value === undefined) {
+      return []
+    }
+
+    return [{ path: path.join('.'), value }]
+  }
+
+  if (template.type !== 'object') {
+    return []
+  }
+
+  return Object.entries(template.properties).flatMap(([key, childTemplate]) => {
+    return collectPongMatchers(childTemplate, requestPayload, [...path, key])
+  })
+}
+
 export async function getUserDeviceOverview(userId: string) {
   const [overview] = await db
     .select({ count: $.count(schema.devices) })
@@ -670,6 +721,10 @@ export async function enqueueDeviceRequestCommand(input: {
     fields: toStateRecord(device.state as Record<string, unknown>),
   })
 
+  const responsePayloadMatchers = responseMessage
+    ? collectPongMatchers(responseMessage.payloadTemplate, payload)
+    : []
+
   const command = await createDeviceCommand({
     deviceId: device.id,
     messageId: requestMessage.id,
@@ -687,6 +742,7 @@ export async function enqueueDeviceRequestCommand(input: {
     responseTopic,
     payload,
     responseMessage,
+    responsePayloadMatchers,
   })
 
   return {
@@ -703,6 +759,7 @@ async function executePendingDeviceCommand(input: {
   responseTopic?: string
   payload: unknown
   responseMessage?: DeviceMessage
+  responsePayloadMatchers?: ResponsePayloadMatcher[]
 }) {
   const runtime = await getMqttRuntime()
 
@@ -714,6 +771,7 @@ async function executePendingDeviceCommand(input: {
       requestTopic: input.requestTopic,
       responseTopic: input.responseTopic,
       responseMessageId: input.responseMessage?.id,
+      expectedPayloadMatches: input.responsePayloadMatchers,
       payload: input.payload,
       timeoutMs: 12000,
     })

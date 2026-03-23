@@ -56,6 +56,7 @@ const defaultDeviceTemplates: schema.NewDeviceTemplate[] = [
             type: 'object',
             properties: {
               version: { type: 'literal', value: 1 },
+              reqId: { type: 'randomId', bits: 32 },
             }
           }
         },
@@ -71,6 +72,7 @@ const defaultDeviceTemplates: schema.NewDeviceTemplate[] = [
               version: { type: 'literal', value: 1 },
               flow: { type: 'field', field: 'flow' },
               battery: { type: 'field', field: 'battery' },
+              reqId: { type: 'pong', field: 'reqId' },
             },
           }
         }

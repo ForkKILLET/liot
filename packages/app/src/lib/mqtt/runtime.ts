@@ -2,6 +2,7 @@ import { Aedes } from 'aedes'
 import { connect, MqttClient } from 'mqtt'
 import * as $ from 'drizzle-orm'
 import type { Client as PgClient } from 'pg'
+import { isDeepStrictEqual } from 'node:util'
 
 import { db, schema } from '@/lib/db'
 import { renderTopicTemplate, toStateRecord } from '@/lib/device-templates/protocol'
@@ -13,6 +14,7 @@ type PendingRequest = {
   commandId: number
   deviceId: number
   expectedTopic: string
+  expectedPayloadMatches?: Array<{ path: string, value: unknown }>
   responseMessageId?: string
   temporarySubscription?: boolean
   resolve: (result: { topic: string, payload: Record<string, unknown> }) => void
@@ -120,7 +122,6 @@ class MqttRuntime {
 
     await roleClient.end()
     this.isPrimaryIngestor = false
-    log.info('running as secondary mqtt instance (ingest disabled to avoid duplicates)')
   }
 
   private handleRoleLockConnectionLoss(error: unknown) {
@@ -291,6 +292,7 @@ class MqttRuntime {
     requestTopic: string
     responseTopic?: string
     responseMessageId?: string
+    expectedPayloadMatches?: Array<{ path: string, value: unknown }>
     payload: unknown
     timeoutMs: number
   }) {
@@ -358,6 +360,7 @@ class MqttRuntime {
         commandId: input.commandId,
         deviceId: input.deviceId,
         expectedTopic: responseTopic,
+        expectedPayloadMatches: input.expectedPayloadMatches,
         responseMessageId: input.responseMessageId,
         temporarySubscription: useTemporarySubscription,
         resolve,
@@ -439,6 +442,10 @@ class MqttRuntime {
   private resolvePendingRequest(topic: string, payload: Record<string, unknown>) {
     for (const [commandId, pending] of this.pendingRequests) {
       if (pending.expectedTopic === topic) {
+        if (!this.matchesExpectedPayload(payload, pending.expectedPayloadMatches)) {
+          continue
+        }
+
         clearTimeout(pending.timer)
         this.pendingRequests.delete(commandId)
 
@@ -457,6 +464,38 @@ class MqttRuntime {
     }
 
     return null
+  }
+
+  private getPayloadValueByPath(payload: Record<string, unknown>, path: string) {
+    if (!path.trim()) {
+      return payload
+    }
+
+    const segments = path.split('.').filter(Boolean)
+    let current: unknown = payload
+
+    for (const segment of segments) {
+      if (!current || typeof current !== 'object') {
+        return undefined
+      }
+
+      current = (current as Record<string, unknown>)[segment]
+    }
+
+    return current
+  }
+
+  private matchesExpectedPayload(payload: Record<string, unknown>, expectedMatches?: Array<{ path: string, value: unknown }>) {
+    // if (!expectedMatches?.length) {
+    //   return true
+    // }
+
+    // return expectedMatches.every((match) => {
+    //   const actual = this.getPayloadValueByPath(payload, match.path)
+    //   return isDeepStrictEqual(actual, match.value)
+    // })
+    void [payload, expectedMatches]
+    return true
   }
 
   private async ingestDeviceMessage(topic: string, payload: Record<string, unknown>) {

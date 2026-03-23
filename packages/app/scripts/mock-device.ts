@@ -44,10 +44,22 @@ client.on('message', (topic, raw) => {
   const requestPayload = raw.toString('utf8')
   console.log('[mock-device] request <-', topic, requestPayload)
 
+  let parsedRequest: Record<string, unknown> = {}
+  try {
+    const parsed = JSON.parse(requestPayload)
+    if (parsed && typeof parsed === 'object') {
+      parsedRequest = parsed as Record<string, unknown>
+    }
+  }
+  catch {
+    parsedRequest = {}
+  }
+
   const responsePayload = {
     version: 1,
     flow: Number(flow.toFixed(3)),
     battery: Number(battery.toFixed(1)),
+    reqId: parsedRequest.reqId ?? null,
   }
 
   const minDelay = Math.max(0, Math.min(responseDelayMinMs, responseDelayMaxMs))

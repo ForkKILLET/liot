@@ -38,6 +38,8 @@ export type JsonTemplate =
   | JsonTemplateLiteral
   | JsonTemplateField
   | JsonTemplateObject
+  | JsonTemplateRandomId
+  | JsonTemplatePong
 
 export type JsonTemplateLiteral = {
   type: 'literal'
@@ -52,6 +54,16 @@ export type JsonTemplateField = {
 export type JsonTemplateObject = {
   type: 'object'
   properties: Record<string, JsonTemplate>
+}
+
+export type JsonTemplateRandomId = {
+  type: 'randomId'
+  bits: number
+}
+
+export type JsonTemplatePong = {
+  type: 'pong'
+  field: string
 }
 
 export type DeviceMessageVariants =
