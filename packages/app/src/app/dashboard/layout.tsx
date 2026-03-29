@@ -1,7 +1,7 @@
 import * as motion from 'framer-motion/client'
 
 import { SiteShell } from '@/comps/site-shell'
-import { UserMenu } from '@/comps/user-menu'
+import { PageToolbar } from '@/comps/page-toolbar'
 import { DashboardSidebar } from '@/comps/dashboard/sidebar'
 import { requireSessionOrRedirect } from '@/lib/auth/server'
 
@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   await requireSessionOrRedirect('/dashboard')
 
   return (
-    <SiteShell header={<UserMenu />}>
+    <SiteShell header={<PageToolbar />}>
       <div className="flex gap-6">
         <aside className="hidden shrink-0 md:block">
           <DashboardSidebar />

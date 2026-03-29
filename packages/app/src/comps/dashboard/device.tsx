@@ -14,14 +14,14 @@ export function Device({
 }: DeviceProps) {
   return (
     <Link href={`/dashboard/devices/${device.id}`}>
-      <Card className='border-slate-800 bg-slate-900/60 transition-all hover:border-slate-700 hover:bg-slate-900 hover:shadow-lg'>
+      <Card className='border-border bg-card transition-all hover:border-border hover:bg-accent hover:shadow-lg'>
         <CardHeader className='pb-2'>
           <div className='flex items-center justify-between gap-2'>
-            <CardTitle className='truncate text-base text-white'>{device.name}</CardTitle>
+            <CardTitle className='truncate text-base text-foreground'>{device.name}</CardTitle>
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
               device.isOnline
                 ? 'bg-emerald-500/15 text-emerald-400'
-                : 'bg-slate-700 text-slate-400'
+                : 'bg-muted text-muted-foreground'
             }`}>
               {device.isOnline ? '在线' : '离线'}
             </span>

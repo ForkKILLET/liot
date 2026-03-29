@@ -166,7 +166,7 @@ export function DeviceRequestActions({ deviceId, requests }: DeviceRequestAction
   }
 
   if (!requests.length) {
-    return <p className='text-sm text-slate-400'>该型号暂无 request 类型操作。</p>
+    return <p className='text-sm text-muted-foreground'>该型号暂无 request 类型操作。</p>
   }
 
   return (

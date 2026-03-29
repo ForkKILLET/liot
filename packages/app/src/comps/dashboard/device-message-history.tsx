@@ -49,11 +49,11 @@ function payloadPreview(payload: unknown): string {
 
 function getMessageTypeBadge(type?: string) {
   const typeColors: Record<string, string> = {
-    report: 'bg-blue-900/30 text-blue-300 border-blue-900/50',
-    request: 'bg-amber-900/30 text-amber-300 border-amber-900/50',
-    response: 'bg-emerald-900/30 text-emerald-300 border-emerald-900/50',
-    set: 'bg-purple-900/30 text-purple-300 border-purple-900/50',
-    action: 'bg-cyan-900/30 text-cyan-300 border-cyan-900/50',
+    report: 'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50',
+    request: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-900/50',
+    response: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/50',
+    set: 'bg-purple-100 text-purple-900 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-900/50',
+    action: 'bg-cyan-100 text-cyan-900 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-900/50',
   }
 
   const color = typeColors[type || 'report'] || typeColors.report
@@ -68,7 +68,7 @@ function getMessageTypeBadge(type?: string) {
 function getStatusBadge(isWaiting: boolean | undefined, isAbnormal: boolean, abnormalReason?: string) {
   if (isWaiting) {
     return (
-      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-900/30 text-amber-300 border border-amber-900/50'>
+      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-900/50'>
         等待中
       </span>
     )
@@ -76,14 +76,14 @@ function getStatusBadge(isWaiting: boolean | undefined, isAbnormal: boolean, abn
 
   if (!isAbnormal) {
     return (
-      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-900/30 text-emerald-300 border border-emerald-900/50'>
+      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/50'>
         正常
       </span>
     )
   }
 
   return (
-    <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-300 border border-red-900/50'>
+    <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-900 border border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-900/50'>
       {abnormalReason || '异常'}
     </span>
   )
@@ -92,8 +92,8 @@ function getStatusBadge(isWaiting: boolean | undefined, isAbnormal: boolean, abn
 export function getDirectionBadge(direction: 'in' | 'out') {
   const directionText = direction === 'in' ? '↓ 入' : '↑ 出'
   const directionColor = direction === 'in'
-    ? 'bg-slate-800 text-slate-300'
-    : 'bg-slate-700 text-slate-200'
+    ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300'
+    : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300'
 
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${directionColor}`}>
@@ -116,7 +116,7 @@ export function DeviceMessageHistory({
   if (total === 0) {
     return (
       <div className='text-center py-12'>
-        <p className='text-slate-400 text-sm'>暂无消息记录</p>
+        <p className='text-muted-foreground text-sm'>暂无消息记录</p>
       </div>
     )
   }
@@ -126,31 +126,31 @@ export function DeviceMessageHistory({
       <div className='overflow-x-auto'>
         <table className='w-full text-sm'>
           <thead>
-            <tr className='border-b border-slate-800'>
-              <th className='px-4 py-3 text-left font-semibold text-slate-400'>消息类型</th>
-              <th className='px-4 py-3 text-left font-semibold text-slate-400'>消息 ID</th>
-              <th className='px-4 py-3 text-left font-semibold text-slate-400'>参数</th>
-              <th className='px-4 py-3 text-left font-semibold text-slate-400'>时间</th>
-              <th className='px-4 py-3 text-left font-semibold text-slate-400'>状态</th>
+            <tr className='border-b border-border'>
+              <th className='px-4 py-3 text-left font-semibold text-muted-foreground'>消息类型</th>
+              <th className='px-4 py-3 text-left font-semibold text-muted-foreground'>消息 ID</th>
+              <th className='px-4 py-3 text-left font-semibold text-muted-foreground'>参数</th>
+              <th className='px-4 py-3 text-left font-semibold text-muted-foreground'>时间</th>
+              <th className='px-4 py-3 text-left font-semibold text-muted-foreground'>状态</th>
             </tr>
           </thead>
           <tbody>
             {messages.map((message) => (
               <Fragment key={message.id}>
                 <tr
-                  className='border-b border-slate-800/50 hover:bg-slate-800/30 cursor-pointer transition-colors'
+                  className='border-b border-border/50 hover:bg-muted/50 cursor-pointer transition-colors'
                   onClick={() => setExpandedId(expandedId === message.id ? null : message.id)}
                 >
                   <td className='px-4 py-3'>
                     {getMessageTypeBadge(message.messageType)}
                   </td>
-                  <td className='px-4 py-3 font-mono text-xs text-slate-300'>
+                  <td className='px-4 py-3 font-mono text-xs text-foreground/80'>
                     {message.messageId || '-'}
                   </td>
-                  <td className='px-4 py-3 font-mono text-xs text-slate-300 max-w-xs truncate' title={formatPayload(message.payload)}>
+                  <td className='px-4 py-3 font-mono text-xs text-foreground/80 max-w-xs truncate' title={formatPayload(message.payload)}>
                     {payloadPreview(message.payload)}
                   </td>
-                  <td className='px-4 py-3 text-slate-400 whitespace-nowrap'>
+                  <td className='px-4 py-3 text-muted-foreground whitespace-nowrap'>
                     {new Date(message.createdAt).toLocaleString()}
                   </td>
                   <td className='px-4 py-3'>
@@ -158,11 +158,11 @@ export function DeviceMessageHistory({
                   </td>
                 </tr>
                 {expandedId === message.id && (
-                  <tr className='border-b border-slate-800/50 bg-slate-800/20'>
+                  <tr className='border-b border-border/50 bg-muted/30'>
                     <td colSpan={5} className='px-4 py-4'>
                       <div className='space-y-2'>
-                        <div className='text-xs text-slate-400 font-mono'>{message.topic}</div>
-                        <pre className='bg-slate-900/50 border border-slate-800 rounded p-3 overflow-x-auto text-xs text-slate-300 font-mono max-h-60'>
+                        <div className='text-xs text-muted-foreground font-mono'>{message.topic}</div>
+                        <pre className='bg-muted border border-border rounded p-3 overflow-x-auto text-xs text-foreground/80 font-mono max-h-60'>
                           {formatPayload(message.payload)}
                         </pre>
                       </div>
@@ -175,8 +175,8 @@ export function DeviceMessageHistory({
         </table>
       </div>
 
-      <div className='flex items-center justify-between border-t border-slate-800 pt-4'>
-        <div className='text-sm text-slate-400'>
+      <div className='flex items-center justify-between border-t border-border pt-4'>
+        <div className='text-sm text-muted-foreground'>
           第 {page} / {totalPages} 页 · 共 {total} 条消息
         </div>
 

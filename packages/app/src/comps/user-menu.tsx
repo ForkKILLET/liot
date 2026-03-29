@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserRound, LogOut } from 'lucide-react'
+import { UserRound, LogOut, LogIn, UserRoundPlus } from 'lucide-react'
 
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/comps/ui/dropdown-menu'
 import { Button } from '@/comps/ui/button'
@@ -21,10 +21,6 @@ export function UserMenu() {
 
   const session = authClient.useSession()
 
-  if (! session.data) return null
-
-  const { user } = session.data
-
   return (
     <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
       <DropdownMenuTrigger
@@ -35,7 +31,7 @@ export function UserMenu() {
         <Button
           variant='outline'
           size='icon'
-          className='h-11 w-11 rounded-full border-slate-800 bg-slate-950/60 text-white hover:border-slate-700 hover:bg-slate-900'
+          className='h-11 w-11 rounded-full'
         >
           <UserRound className='h-5 w-5' />
         </Button>
@@ -44,25 +40,54 @@ export function UserMenu() {
       <DropdownMenuContent
         align='end'
         sideOffset={12}
-        className='w-56 border-slate-800 bg-slate-900/90 text-slate-100 backdrop-blur'
+        className='w-56'
       >
-        <DropdownMenuLabel className='flex flex-col gap-0.5 text-left'>
-          <span className='text-xs uppercase tracking-wide text-slate-400'>已登录账户</span>
-          <span className='text-base font-semibold text-white'>{user.name}</span>
-          <span className='text-sm text-slate-400'>{user.email}</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className='bg-slate-800' />
-        <DropdownMenuItem
-          variant='destructive'
-          className='gap-3 text-sm'
-          onSelect={(event) => {
-            event.preventDefault()
-            handleLogout()
-          }}
-        >
-          <LogOut className='h-4 w-4' />
-          退出登录
-        </DropdownMenuItem>
+        {session.data ? (
+          <>
+            <DropdownMenuLabel className='flex flex-col gap-0.5 text-left'>
+              <span className='text-xs uppercase tracking-wide'>已登录账户</span>
+              <span className='text-base font-semibold'>{session.data.user.name}</span>
+              <span className='text-sm'>{session.data.user.email}</span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant='destructive'
+              className='gap-3 text-sm'
+              onSelect={(event) => {
+                event.preventDefault()
+                handleLogout()
+              }}
+            >
+              <LogOut className='h-4 w-4' />
+              退出登录
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <DropdownMenuLabel className='text-xs uppercase tracking-wide'>账户</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className='gap-3 text-sm'
+              onSelect={() => {
+                setProfileMenuOpen(false)
+                router.push('/auth/login')
+              }}
+            >
+              <LogIn className='h-4 w-4' />
+              登录
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className='gap-3 text-sm'
+              onSelect={() => {
+                setProfileMenuOpen(false)
+                router.push('/auth/register')
+              }}
+            >
+              <UserRoundPlus className='h-4 w-4' />
+              注册
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

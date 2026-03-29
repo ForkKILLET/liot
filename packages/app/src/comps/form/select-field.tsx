@@ -76,7 +76,7 @@ export function SelectField({
           <div className={cn('space-y-1', containerClassName)}>
             <label
               htmlFor={inputId}
-              className={cn('block text-sm font-medium text-slate-200', labelClassName)}
+              className={cn('block text-sm font-medium text-foreground', labelClassName)}
             >
               {label}
             </label>
@@ -84,7 +84,7 @@ export function SelectField({
             {description && (
               <p
                 id={descriptionId}
-                className={cn('text-xs text-slate-400', descriptionClassName)}
+                className={cn('text-xs text-muted-foreground', descriptionClassName)}
               >
                 {description}
               </p>
@@ -101,7 +101,7 @@ export function SelectField({
               <SelectTrigger
                 id={inputId}
                 className={cn(
-                  'w-full bg-slate-950/30 text-slate-100',
+                  'w-full bg-input text-foreground',
                   fieldError && 'border-destructive text-destructive focus-visible:ring-destructive/40',
                   className
                 )}
@@ -118,7 +118,7 @@ export function SelectField({
             </Select>
 
             {hint && ! fieldError && (
-              <p className={cn('text-xs text-slate-400', hintClassName)}>{hint}</p>
+              <p className={cn('text-xs text-muted-foreground', hintClassName)}>{hint}</p>
             )}
 
             {fieldError && (

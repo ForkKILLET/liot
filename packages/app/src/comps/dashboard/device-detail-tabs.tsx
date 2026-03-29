@@ -84,7 +84,7 @@ export function DeviceDetailTabs({
     <div className='space-y-6'>
       {section === 'properties' && (
         <div className='space-y-6'>
-          <Card className='border-slate-800 bg-slate-900/60'>
+          <Card className='border-border bg-card'>
             <CardHeader className='pb-2'>
               <CardTitle>基本信息</CardTitle>
             </CardHeader>
@@ -102,9 +102,9 @@ export function DeviceDetailTabs({
             </CardContent>
           </Card>
 
-          <Card className='border-red-900/50 bg-red-950/20'>
+          <Card className='border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20'>
             <CardHeader className='pb-2'>
-              <CardTitle className='text-red-400'>危险操作</CardTitle>
+              <CardTitle className='text-red-600 dark:text-red-400'>危险操作</CardTitle>
             </CardHeader>
             <CardContent>
               <DeviceDeleteButton deviceId={deviceId} deviceName={deviceName} />
@@ -116,7 +116,7 @@ export function DeviceDetailTabs({
       {section === 'status' && (
         <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'>
           <div className='space-y-6'>
-            <Card className='border-slate-800 bg-slate-900/60'>
+            <Card className='border-border bg-card'>
               <CardHeader className='pb-2'>
                 <CardTitle>设备状态</CardTitle>
               </CardHeader>
@@ -128,18 +128,18 @@ export function DeviceDetailTabs({
                   onToggleChartField={toggleChartField}
                 />
 
-                <div className='mt-4 border-t border-slate-800 pt-3 text-sm'>
+                <div className='mt-4 border-t border-border pt-3 text-sm'>
                   <div className='grid grid-cols-[7rem_1fr] gap-x-4 gap-y-3'>
                     <div className='flex h-9 items-center text-muted-foreground font-medium'>在线状态</div>
                     <div className='flex h-9 items-center'>
                       <span
                         className={`inline-flex items-center gap-2 ${
-                          device.isOnline ? 'text-emerald-400' : 'text-slate-400'
+                          device.isOnline ? 'text-emerald-400' : 'text-muted-foreground'
                         }`}
                       >
                         <span
                           className={`inline-block h-2 w-2 rounded-full ${
-                            device.isOnline ? 'bg-emerald-400' : 'bg-slate-600'
+                            device.isOnline ? 'bg-emerald-400' : 'bg-muted'
                           }`}
                         />
                         {device.isOnline ? '在线' : '离线'}
@@ -154,7 +154,7 @@ export function DeviceDetailTabs({
               </CardContent>
             </Card>
 
-            <Card className='border-slate-800 bg-slate-900/60'>
+            <Card className='border-border bg-card'>
               <CardHeader className='pb-2'>
                 <CardTitle>主动操作</CardTitle>
               </CardHeader>
@@ -178,7 +178,7 @@ export function DeviceDetailTabs({
       )}
 
       {section === 'messages' && (
-        <Card className='border-slate-800 bg-slate-900/60'>
+        <Card className='border-border bg-card'>
           <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
             <CardTitle>消息历史</CardTitle>
             <Button

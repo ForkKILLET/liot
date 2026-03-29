@@ -179,25 +179,25 @@ export function DeviceStateChartPanel({ deviceId, selectedFields }: DeviceStateC
 
   if (!selectedFields.length) {
     return (
-      <Card className='border-slate-800 bg-slate-900/60'>
+      <Card className='border-border bg-card'>
         <CardHeader className='pb-2'>
           <CardTitle>状态图表</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className='text-sm text-slate-400'>在左侧状态字段点击图表按钮后，这里会展示实时曲线。</p>
+          <p className='text-sm text-muted-foreground'>在左侧状态字段点击图表按钮后，这里会展示实时曲线。</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className='border-slate-800 bg-slate-900/60'>
+    <Card className='border-border bg-card'>
       <CardHeader className='pb-2'>
         <CardTitle>状态图表</CardTitle>
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='flex flex-wrap items-center gap-2'>
-          <span className='text-xs text-slate-400'>数据范围</span>
+          <span className='text-xs text-muted-foreground'>数据范围</span>
           <Select
             value={windowOption}
             onValueChange={(value) => setWindowOption(value as WindowOption)}
@@ -224,17 +224,17 @@ export function DeviceStateChartPanel({ deviceId, selectedFields }: DeviceStateC
 
         <div className='flex flex-wrap gap-2 text-xs'>
           {selectedFields.map((meta, index) => (
-            <div key={meta.field} className='rounded border border-slate-700 bg-slate-900/70 px-2 py-1'>
+            <div key={meta.field} className='rounded border border-border bg-card px-2 py-1'>
               <span style={{ color: colors[index % colors.length] }}>{meta.label}</span>
-              <span className='text-slate-400'> ({meta.unit})</span>
-              <span className='text-slate-500'> · 范围 {meta.min ?? '-'} ~ {meta.max ?? '-'}</span>
+              <span className='text-muted-foreground'> ({meta.unit})</span>
+              <span className='text-muted-foreground'> · 范围 {meta.min ?? '-'} ~ {meta.max ?? '-'}</span>
             </div>
           ))}
         </div>
 
         <div className='h-80 w-full'>
           {isLoading ? (
-            <div className='flex h-full items-center justify-center text-sm text-slate-400'>加载中...</div>
+            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>加载中...</div>
           ) : rows.length ? (
             <ResponsiveContainer width='100%' height='100%'>
               <LineChart data={rows} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
@@ -280,7 +280,7 @@ export function DeviceStateChartPanel({ deviceId, selectedFields }: DeviceStateC
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className='flex h-full items-center justify-center text-sm text-slate-400'>当前窗口暂无数据</div>
+            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>当前窗口暂无数据</div>
           )}
         </div>
       </CardContent>

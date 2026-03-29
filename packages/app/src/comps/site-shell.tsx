@@ -25,10 +25,10 @@ export function SiteShell({
   footerClassName,
 }: SiteShellProps) {
   return (
-    <div className={cn('min-h-screen bg-slate-950 text-slate-50', mainClassName)}>
+    <div className={cn('min-h-screen bg-background text-foreground', mainClassName)}>
       <div className={cn('mx-auto flex min-h-screen max-w-screen flex-col py-8 sm:px-6 lg:px-8', containerClassName)}>
-        <header className={cn('flex flex-col gap-5 border-b border-slate-800 pb-6 sm:flex-row sm:items-center sm:justify-between', headerClassName)}>
-          <Link href='/' icon={false} className='flex items-center gap-3 text-white/90 transition hover:text-white'>
+        <header className={cn('flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between', headerClassName)}>
+          <Link href='/' icon={false} className='flex items-center gap-3 text-foreground/90 transition hover:text-foreground'>
             <span className='flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner shadow-primary/20'>
               <Radar className='h-5 w-5' />
             </span>
@@ -51,7 +51,7 @@ export function SiteShell({
         </main>
 
         {footer !== null && (
-          <footer className={cn('mt-auto border-t border-slate-800 pt-6 text-center text-sm text-slate-500', footerClassName)}>
+          <footer className={cn('mt-auto border-t border-border pt-6 text-center text-sm text-muted-foreground', footerClassName)}>
             {footer}
           </footer>
         )}

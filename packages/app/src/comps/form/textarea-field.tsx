@@ -62,7 +62,7 @@ export function TextareaField({
           <div className={cn('space-y-1', containerClassName)}>
             <label
               htmlFor={inputId}
-              className={cn('block text-sm font-medium text-slate-200', labelClassName)}
+              className={cn('block text-sm font-medium text-foreground', labelClassName)}
             >
               {label}
             </label>
@@ -70,7 +70,7 @@ export function TextareaField({
             {description && (
               <p
                 id={descriptionId}
-                className={cn('text-xs text-slate-400', descriptionClassName)}
+                className={cn('text-xs text-muted-foreground', descriptionClassName)}
               >
                 {description}
               </p>
@@ -87,14 +87,14 @@ export function TextareaField({
               aria-invalid={Boolean(fieldError)}
               aria-describedby={ariaDescribedBy}
               className={cn(
-                'bg-slate-950/30 text-slate-100 placeholder:text-slate-500',
+                'bg-input text-foreground placeholder:text-muted-foreground',
                 fieldError && 'border-destructive text-destructive placeholder:text-destructive/60 focus-visible:border-destructive focus-visible:ring-destructive/40',
                 className,
               )}
             />
 
             {hint && ! fieldError && (
-              <p className={cn('text-xs text-slate-400', hintClassName)}>{hint}</p>
+              <p className={cn('text-xs text-muted-foreground', hintClassName)}>{hint}</p>
             )}
 
             {fieldError && (

@@ -46,7 +46,7 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
 
       {filteredDevices.length === 0
         ? (
-          <p className='text-sm text-slate-400'>
+          <p className='text-sm text-muted-foreground'>
             {devices.length === 0
               ? '暂无设备，点击上方添加第一个设备。'
               : '没有匹配的设备，请调整筛选条件。'}
@@ -69,7 +69,7 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
               <div className='overflow-x-auto'>
                 <table className='w-full text-sm'>
                   <thead>
-                    <tr className='border-b border-slate-800 text-left text-slate-400'>
+                    <tr className='border-b border-border text-left text-muted-foreground'>
                       <th className='py-3 pr-4 font-medium'>设备 ID</th>
                       <th className='py-3 pr-4 font-medium'>名称</th>
                       <th className='py-3 pr-4 font-medium'>型号</th>
@@ -79,25 +79,25 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
                   </thead>
                   <tbody>
                     {filteredDevices.map(device => (
-                      <tr key={device.id} className='border-b border-slate-800/80'>
-                        <td className='py-3 pr-4 text-slate-300'>{device.id}</td>
+                      <tr key={device.id} className='border-b border-border/80'>
+                        <td className='py-3 pr-4 text-foreground/80'>{device.id}</td>
                         <td className='py-3 pr-4'>
                           <Link
                             href={`/dashboard/devices/${device.id}`}
-                            className='font-medium text-slate-100 underline-offset-2 hover:underline'
+                            className='font-medium text-foreground underline-offset-2 hover:underline'
                           >
                             {device.name}
                           </Link>
                         </td>
-                        <td className='py-3 pr-4 text-slate-300'>
+                        <td className='py-3 pr-4 text-foreground/80'>
                           {templateNameById.get(device.templateId) ?? '-'}
                         </td>
                         <td className='py-3 pr-4'>
-                          <span className={device.isOnline ? 'text-emerald-400' : 'text-slate-400'}>
+                          <span className={device.isOnline ? 'text-emerald-400' : 'text-muted-foreground'}>
                             {device.isOnline ? '在线' : '离线'}
                           </span>
                         </td>
-                        <td className='max-w-[28rem] py-3 text-slate-400'>
+                        <td className='max-w-[28rem] py-3 text-muted-foreground'>
                           <span className='line-clamp-1'>{device.description || '-'}</span>
                         </td>
                       </tr>

@@ -38,8 +38,8 @@ export function DeviceDeleteButton({
   if (showConfirm) {
     return (
       <div className='space-y-4'>
-        <p className='text-sm text-slate-300'>
-          确定要删除设备 <span className='font-semibold text-white'>{deviceName}</span> 吗？该操作无法撤销。
+        <p className='text-sm text-foreground/80'>
+          确定要删除设备 <span className='font-semibold text-foreground'>{deviceName}</span> 吗？该操作无法撤销。
         </p>
         <div className='flex gap-3'>
           <Button

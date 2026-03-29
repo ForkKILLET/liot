@@ -88,7 +88,7 @@ export function InputField({
   }[role]
 
   const iconStyled = iconComputed && cloneElement(iconComputed, {
-    className: 'h-4 w-4 text-slate-400',
+    className: 'h-4 w-4 text-muted-foreground',
   })
 
   return (
@@ -110,7 +110,7 @@ export function InputField({
           <div className={cn('space-y-1', containerClassName)}>
             <label
               htmlFor={inputId}
-              className={cn('block text-sm font-medium text-slate-200', labelClassName)}
+              className={cn('block text-sm font-medium text-foreground', labelClassName)}
             >
               {label}
             </label>
@@ -118,7 +118,7 @@ export function InputField({
             {description && (
               <p
                 id={descriptionId}
-                className={cn('text-xs text-slate-400', descriptionClassName)}
+                className={cn('text-xs text-muted-foreground', descriptionClassName)}
               >
                 {description}
               </p>
@@ -146,7 +146,7 @@ export function InputField({
                 aria-invalid={Boolean(fieldError)}
                 aria-describedby={ariaDescribedBy}
                 className={cn(
-                  'bg-slate-950/30 text-slate-100 placeholder:text-slate-500',
+                  'bg-input text-foreground placeholder:text-muted-foreground',
                   iconComputed && 'pl-10',
                   role === 'password' && 'pr-12',
                   fieldError && 'border-destructive text-destructive placeholder:text-destructive/60 focus-visible:border-destructive focus-visible:ring-destructive/40',
@@ -158,7 +158,7 @@ export function InputField({
                 <button
                   type='button'
                   onClick={togglePasswordVisibility}
-                  className='absolute inset-y-0 right-2 flex items-center rounded-md px-2 text-slate-400 transition hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
+                  className='absolute inset-y-0 right-2 flex items-center rounded-md px-2 text-muted-foreground transition hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
                 >
                   {isPasswordVisible
                     ? <EyeOff className='h-4 w-4' />
@@ -170,7 +170,7 @@ export function InputField({
             </div>
 
             {hint && ! fieldError && (
-              <p className={cn('text-xs text-slate-400', hintClassName)}>{hint}</p>
+              <p className={cn('text-xs text-muted-foreground', hintClassName)}>{hint}</p>
             )}
 
             {fieldError && (

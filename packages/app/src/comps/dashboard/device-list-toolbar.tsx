@@ -159,13 +159,13 @@ export function DeviceListToolbar({
           {activeFilters.map((filter) => (
             <div
               key={`${filter.type}-${filter.value}`}
-              className='inline-flex items-center gap-2 rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300'
+              className='inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary'
             >
               <span>{filter.label}</span>
               <button
                 type='button'
                 onClick={() => clearFilter(filter.type, filter.value)}
-                className='ml-1 transition hover:text-slate-100'
+                className='ml-1 transition hover:text-foreground'
               >
                 <X className='h-3 w-3' />
               </button>

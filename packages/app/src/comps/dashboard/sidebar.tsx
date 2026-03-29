@@ -50,14 +50,14 @@ export function DashboardSidebar() {
     : []
 
   return (
-    <nav className="flex flex-col space-y-2 w-40 p-4 border-r border-slate-800 h-full">
+    <nav className="flex flex-col space-y-2 w-40 p-4 border-r border-border h-full">
       {items.map((item) => (
         <SidebarItem key={item.href} item={item} pathname={pathname} />
       ))}
 
       {detailDeviceId && (
-        <div className='mt-4 border-t border-slate-800 pt-3'>
-          <div className='px-2 pb-2 text-xs text-slate-500'>设备 #{detailDeviceId}</div>
+        <div className='mt-4 border-t border-border pt-3'>
+          <div className='px-2 pb-2 text-xs text-muted-foreground'>设备 #{detailDeviceId}</div>
           <div className='flex flex-col gap-1'>
             {sectionItems.map((sectionItem) => {
               const active = sectionItem.href.endsWith(`/${detailSection}`)

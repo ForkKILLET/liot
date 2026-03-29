@@ -19,7 +19,7 @@ export function DeviceStateFields({
   const stateRecord = toStateRecord(state)
 
   if (!fields.length) {
-    return <p className='text-sm text-slate-400'>该型号未定义状态字段。</p>
+    return <p className='text-sm text-muted-foreground'>该型号未定义状态字段。</p>
   }
 
   return (
