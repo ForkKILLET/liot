@@ -34,12 +34,10 @@ ENV PORT=4000
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
-COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/.next/standalone/ ./
-COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/drizzle ./drizzle
-COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/drizzle.config.ts ./drizzle.config.ts
-COPY --chown=nextjs:nodejs docker/entrypoint.sh /entrypoint.sh
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/.next/standalone/   ./
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/public              ./packages/app/public
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/.next/static        ./packages/app/.next/static
+COPY --chown=nextjs:nodejs docker/entrypoint.sh                                       /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh && mkdir -p logs
 
