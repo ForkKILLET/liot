@@ -7,6 +7,15 @@ export async function register() {
   const log = createLogger('instrumentation')
 
   try {
+    const { runMigrations } = await import('@/lib/db/migrate')
+    await runMigrations()
+    log.info('migrations completed')
+  }
+  catch (error) {
+    log.error({ error }, 'migrations failed')
+  }
+
+  try {
     const { getMqttRuntime } = await import('@/lib/mqtt/runtime')
     await getMqttRuntime()
     log.info('mqtt runtime initialized on server startup')
@@ -14,4 +23,5 @@ export async function register() {
   catch (error) {
     log.error({ error }, 'mqtt runtime initialization failed on server startup')
   }
+
 }

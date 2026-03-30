@@ -36,6 +36,7 @@ CREATE TABLE "devices" (
 	"template_id" integer NOT NULL,
 	"created_by" text NOT NULL,
 	"created_at" date DEFAULT now(),
+	"device_id" text NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
 	"is_online" boolean DEFAULT false,
@@ -99,6 +100,7 @@ ALTER TABLE "devices" ADD CONSTRAINT "devices_template_id_device_templates_id_fk
 ALTER TABLE "devices" ADD CONSTRAINT "devices_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "devices_template_id_device_id_unique" ON "devices" USING btree ("template_id","device_id");--> statement-breakpoint
 CREATE INDEX "accounts_userId_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "sessions_userId_idx" ON "sessions" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verifications_identifier_idx" ON "verifications" USING btree ("identifier");

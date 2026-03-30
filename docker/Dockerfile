@@ -1,10 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
+### base
 FROM node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable pnpm
 
+### deps
 FROM base AS deps
 WORKDIR /workspace
 
@@ -12,35 +14,31 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/app/package.json packages/app/package.json
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-	pnpm fetch --frozen-lockfile
+  pnpm install --frozen-lockfile --filter @liot/app...
 
-FROM deps AS build
+### builder
+FROM deps AS builder
 WORKDIR /workspace
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
 
 COPY . .
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-	pnpm install --frozen-lockfile --prefer-offline --filter @liot/app...
-RUN pnpm --filter @liot/app build
+  pnpm --filter @liot/app build
 
-FROM node:20-alpine AS runner
+### runner
+FROM base AS runner
 WORKDIR /app
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
 ENV NODE_ENV=production
 ENV PORT=4000
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
-COPY --from=build --chown=nextjs:nodejs /workspace/packages/app/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /workspace/packages/app/package.json ./package.json
-COPY --from=build --chown=nextjs:nodejs /workspace/packages/app/.next/static ./.next/static
-COPY --from=build --chown=nextjs:nodejs /workspace/packages/app/public ./public
-COPY --from=build --chown=nextjs:nodejs /workspace/packages/app/drizzle ./drizzle
-COPY --from=build --chown=nextjs:nodejs /workspace/packages/app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/.next/standalone/ ./
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/drizzle ./drizzle
+COPY --from=builder --chown=nextjs:nodejs /workspace/packages/app/drizzle.config.ts ./drizzle.config.ts
 COPY --chown=nextjs:nodejs docker/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh && mkdir -p logs
@@ -50,4 +48,4 @@ EXPOSE 4000
 EXPOSE 1883
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["node", "server.js"]
+CMD ["node", "packages/app/server.js"]
