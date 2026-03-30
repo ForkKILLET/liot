@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { LogIn } from 'lucide-react'
 import * as motion from 'framer-motion/client'
@@ -28,6 +28,14 @@ function normalizeNextPath(nextPath: string | null) {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  )
+}
+
+function LoginPageContent() {
   const form = useForm<LoginFormData>({
     mode: 'onTouched',
   })

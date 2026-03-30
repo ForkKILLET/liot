@@ -1,4 +1,4 @@
-import { betterAuth } from 'better-auth'
+import { Auth, betterAuth, BetterAuthOptions } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 
@@ -6,7 +6,7 @@ import { db, schema } from '@/lib/db'
 import { headers } from 'next/headers'
 import { redirect, unauthorized } from 'next/navigation'
 
-export const auth = betterAuth({
+const authOptions: BetterAuthOptions = {
   emailAndPassword: {
     enabled: true,
   },
@@ -18,10 +18,16 @@ export const auth = betterAuth({
   plugins: [
     nextCookies(),
   ],
-})
+}
+type AuthInstance = Auth<typeof authOptions>
+let authInstance: AuthInstance | null = null
+
+export function getAuth() {
+  return authInstance ??= betterAuth(authOptions)
+}
 
 export async function getSession() {
-  const session = await auth.api.getSession({
+  const session = await getAuth().api.getSession({
     headers: await headers()
   })
 
@@ -36,7 +42,7 @@ export async function getCurrentUser() {
 }
 
 export async function requireSessionOrRedirect(nextPath = '/dashboard') {
-  const session = await auth.api.getSession({
+  const session = await getAuth().api.getSession({
     headers: await headers(),
   })
 
