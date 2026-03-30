@@ -24,6 +24,7 @@ export function DeviceEditor({
 }: DeviceEditorProps) {
   const form = useForm<DefineDeviceUnderCurrentUser>({
     defaultValues: {
+      deviceId: '',
       name: '',
       description: '',
       templateId: undefined,
@@ -34,9 +35,25 @@ export function DeviceEditor({
   const router = useRouter()
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSave(values)
-    toast.success('设备添加成功')
-    router.push('/dashboard/devices')
+    form.clearErrors('deviceId')
+
+    try {
+      await onSave(values)
+      toast.success('设备添加成功')
+      router.push('/dashboard/devices')
+    }
+    catch (error) {
+      const message = error instanceof Error ? error.message : '设备添加失败，请稍后重试'
+
+      if (message.includes('设备 ID')) {
+        form.setError('deviceId', {
+          type: 'server',
+          message,
+        })
+      }
+
+      toast.error(message)
+    }
   })
 
   return (
@@ -46,6 +63,20 @@ export function DeviceEditor({
     >
       <FormProvider {...form}>
         <form onSubmit={handleSubmit} className='space-y-6'>
+          <InputField
+            name='deviceId'
+            label='设备 ID'
+            role='text'
+            description='设备绑定的 ID，创建后不可修改。'
+            rules={{
+              required: '请输入设备 ID',
+              pattern: {
+                value: /^[a-zA-Z0-9_-]+$/,
+                message: '设备 ID 仅支持字母、数字、- 和 _',
+              },
+            }}
+          />
+
           <InputField
             name='name'
             label='设备名称'

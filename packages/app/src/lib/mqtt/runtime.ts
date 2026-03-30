@@ -2,7 +2,6 @@ import { Aedes } from 'aedes'
 import { connect, MqttClient } from 'mqtt'
 import * as $ from 'drizzle-orm'
 import type { Client as PgClient } from 'pg'
-import { isDeepStrictEqual } from 'node:util'
 
 import { db, schema } from '@/lib/db'
 import { renderTopicTemplate, toStateRecord } from '@/lib/device-templates/protocol'
@@ -499,49 +498,49 @@ class MqttRuntime {
   }
 
   private async ingestDeviceMessage(topic: string, payload: Record<string, unknown>) {
-    const match = topic.match(/^device\/[^/]+\/(\d+)\/.+$/)
+    const match = topic.match(/^device\/([^/]+)\/([^/]+)\/.+$/)
     if (!match) {
       log.debug({ topic }, 'topic does not match ingest pattern, skipped state ingest')
       return false
     }
 
-    const deviceId = Number(match[1])
-    if (!Number.isFinite(deviceId)) {
-      log.warn({ topic }, 'invalid device id in mqtt topic')
+    const topicTemplateName = match[1]
+    const topicDeviceId = match[2]
+    if (!topicTemplateName || !topicDeviceId) {
+      log.warn({ topic }, 'invalid template or device id in mqtt topic')
       return false
     }
 
     const [device] = await db
       .select()
       .from(schema.devices)
+      .innerJoin(schema.deviceTemplates, $.eq(schema.deviceTemplates.id, schema.devices.templateId))
       .where(
         $.and(
-          $.eq(schema.devices.id, deviceId),
+          $.eq(schema.deviceTemplates.name, topicTemplateName),
+          $.eq(schema.devices.deviceId, topicDeviceId),
           $.isNull(schema.devices.deletedAt)
         )
       )
       .limit(1)
 
     if (!device) {
-      log.warn({ deviceId, topic }, 'device not found for incoming mqtt message')
+      log.warn({ template: topicTemplateName, deviceId: topicDeviceId, topic }, 'device not found for incoming mqtt message')
       return false
     }
 
-    const [template] = await db
-      .select()
-      .from(schema.deviceTemplates)
-      .where($.eq(schema.deviceTemplates.id, device.templateId))
-      .limit(1)
+    const resolvedDevice = device.devices
+    const template = device.device_templates
 
     if (!template) {
-      log.warn({ deviceId, templateId: device.templateId }, 'template not found for device')
+      log.warn({ deviceId: resolvedDevice.id, templateId: resolvedDevice.templateId }, 'template not found for device')
       return false
     }
 
     const matchedMessage = template.protocol.messages.find((message) => {
       const expectedTopic = renderTopicTemplate(message.topicTemplate, {
         template: template.name,
-        id: device.id,
+        id: resolvedDevice.deviceId,
       })
 
       return expectedTopic === topic
@@ -555,14 +554,14 @@ class MqttRuntime {
     })
 
     if (!matchedMessage) {
-      await this.saveIncomingMessage(device.id, topic, payload)
-      log.debug({ deviceId: device.id, topic }, 'incoming message stored without state update (no report template match)')
+      await this.saveIncomingMessage(resolvedDevice.id, topic, payload)
+      log.debug({ deviceId: resolvedDevice.id, topic }, 'incoming message stored without state update (no report template match)')
       return true
     }
 
     if (matchedMessage.type === 'request' || matchedMessage.type === 'set' || matchedMessage.type === 'action') {
       log.debug(
-        { deviceId: device.id, topic, messageId: matchedMessage.id, messageType: matchedMessage.type },
+        { deviceId: resolvedDevice.id, topic, messageId: matchedMessage.id, messageType: matchedMessage.type },
         'skip persisting incoming cloud-to-device message'
       )
       return true
@@ -570,14 +569,14 @@ class MqttRuntime {
 
     if (matchedMessage.type === 'report' && responseMessageIds.has(matchedMessage.id)) {
       log.debug(
-        { deviceId: device.id, topic, messageId: matchedMessage.id },
+        { deviceId: resolvedDevice.id, topic, messageId: matchedMessage.id },
         'skip persisting incoming response message in generic ingest path'
       )
       return true
     }
 
     if (matchedMessage.type === 'report') {
-      const currentState = toStateRecord(device.state as Record<string, unknown>)
+      const currentState = toStateRecord(resolvedDevice.state as Record<string, unknown>)
       const nextState = { ...currentState }
 
       matchedMessage.fields.forEach((fieldName) => {
@@ -593,12 +592,12 @@ class MqttRuntime {
           stateUpdatedAt: new Date(),
           isOnline: true,
         })
-        .where($.eq(schema.devices.id, device.id))
+        .where($.eq(schema.devices.id, resolvedDevice.id))
 
-      log.info({ deviceId: device.id, reportId: matchedMessage.id, topic }, 'device state updated from mqtt report')
+      log.info({ deviceId: resolvedDevice.id, reportId: matchedMessage.id, topic }, 'device state updated from mqtt report')
     }
 
-    await this.saveIncomingMessage(device.id, topic, payload, matchedMessage.id)
+    await this.saveIncomingMessage(resolvedDevice.id, topic, payload, matchedMessage.id)
     return true
   }
 

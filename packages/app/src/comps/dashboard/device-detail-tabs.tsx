@@ -24,6 +24,7 @@ export type DeviceDetailTabsProps = {
   deviceName: string
   deviceDescription: string | null
   device: {
+    deviceId: string
     templateId: number
     createdBy: string
     createdAt: string | Date | null
@@ -91,7 +92,7 @@ export function DeviceDetailTabs({
             <CardContent>
               <DeviceBasicInfoEditor
                 deviceId={deviceId}
-                deviceDisplayId={deviceId}
+                deviceDisplayId={device.deviceId}
                 templateId={device.templateId}
                 templateName={template?.name ?? null}
                 creatorDisplay={creator ? `${creator.name} (${creator.email})` : device.createdBy}

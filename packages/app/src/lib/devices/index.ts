@@ -300,7 +300,7 @@ export async function getDeviceMessagesHistory(input: {
     const matched = template.protocol.messages.find((message) => {
       const expectedTopic = renderTopicTemplate(message.topicTemplate, {
         template: template.name,
-        id: device.id,
+        id: device.deviceId,
       })
       return expectedTopic === topic
     })
@@ -491,13 +491,41 @@ export async function getDeviceDetailById(id: number) {
   }
 }
 
-export type DefineDevice = Pick<NewDevice, 'name' | 'description' | 'templateId' | 'createdBy'>
+export type DefineDevice = Pick<NewDevice, 'deviceId' | 'name' | 'description' | 'templateId' | 'createdBy'>
 
 export async function createDevice(device: DefineDevice) {
+  const normalizedDeviceId = device.deviceId.trim()
+  if (!normalizedDeviceId) {
+    throw new Error('设备 ID 不能为空')
+  }
+
+  const [existingDevice] = await db
+    .select({
+      id: schema.devices.id,
+      createdBy: schema.devices.createdBy,
+    })
+    .from(schema.devices)
+    .where(
+      $.and(
+        $.eq(schema.devices.templateId, device.templateId),
+        $.eq(schema.devices.deviceId, normalizedDeviceId)
+      )
+    )
+    .limit(1)
+
+  if (existingDevice) {
+    if (existingDevice.createdBy !== device.createdBy) {
+      throw new Error('该型号下设备 ID 已被其他用户占用')
+    }
+
+    throw new Error('该型号下设备 ID 已存在')
+  }
+
   await db
     .insert(schema.devices)
     .values({
       ...device,
+      deviceId: normalizedDeviceId,
       state: {},
     })
 }
@@ -708,12 +736,12 @@ export async function enqueueDeviceRequestCommand(input: {
   const responseMessage = template.protocol.messages.find((message) => message.id === requestMessage.responseId)
   const requestTopic = renderTopicTemplate(requestMessage.topicTemplate, {
     template: template.name,
-    id: device.id,
+    id: device.deviceId,
   })
   const responseTopic = responseMessage
     ? renderTopicTemplate(responseMessage.topicTemplate, {
       template: template.name,
-      id: device.id,
+      id: device.deviceId,
     })
     : undefined
 

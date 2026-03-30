@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, boolean, json, date, timestamp, text } from 'drizzle-orm/pg-core'
+import { integer, pgTable, serial, boolean, json, date, timestamp, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { users } from './auth'
 
@@ -91,6 +91,8 @@ export const devices = pgTable('devices', {
   createdBy: text().references(() => users.id).notNull(),
   createdAt: date().defaultNow(),
 
+  // User-specified immutable device identifier used in topic templates.
+  deviceId: text().notNull(),
   name: text().notNull(),
   description: text(),
 
@@ -99,7 +101,9 @@ export const devices = pgTable('devices', {
   stateUpdatedAt: timestamp().defaultNow(),
 
   deletedAt: timestamp(),
-})
+}, (table) => ({
+  templateDeviceIdUnique: uniqueIndex('devices_template_id_device_id_unique').on(table.templateId, table.deviceId),
+}))
 
 export type Device = typeof devices.$inferSelect
 export type NewDevice = typeof devices.$inferInsert

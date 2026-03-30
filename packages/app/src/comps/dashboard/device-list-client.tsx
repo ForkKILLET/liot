@@ -80,7 +80,7 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
                   <tbody>
                     {filteredDevices.map(device => (
                       <tr key={device.id} className='border-b border-border/80'>
-                        <td className='py-3 pr-4 text-foreground/80'>{device.id}</td>
+                        <td className='py-3 pr-4 text-foreground/80'>{device.deviceId}</td>
                         <td className='py-3 pr-4'>
                           <Link
                             href={`/dashboard/devices/${device.id}`}

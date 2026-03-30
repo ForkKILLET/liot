@@ -30,7 +30,7 @@ export function Device({
         <CardContent>
           <Descriptions>
             <DescriptionItem label='设备 ID'>
-              {device.id}
+              {device.deviceId}
             </DescriptionItem>
             <DescriptionItem label='描述'>
               {device.description || '-'}

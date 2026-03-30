@@ -11,7 +11,7 @@ import { updateDeviceBasicInfo } from '@/lib/devices'
 
 export type DeviceBasicInfoEditorProps = {
   deviceId: number
-  deviceDisplayId: number
+  deviceDisplayId: string
   templateId: number
   templateName: string | null
   creatorDisplay: string
