@@ -218,46 +218,36 @@
 
 ---
 
-## 当前 MQTT 入库逻辑（最新）
+## 当前 MQTT 入库逻辑（现状 + 严格 Review）
 
-以下为 `src/lib/mqtt/runtime.ts` 的当前行为定义（已按最近联调结果修正）：
+以下为 `src/lib/mqtt/runtime.ts` 当前行为与已确认风险（以代码现状为准）。
 
-1. 角色选举与订阅策略
+1. 当前已实现行为（确认）
 
-- 启动时通过专用数据库连接（`pg.Client`）竞争并持有 advisory lock，决定 primary / secondary。
-- primary：订阅 `device/+/+/#`，负责通用 ingest 与状态更新。
-- secondary：不订阅通配主题；仅在发起 request 时临时订阅对应 `responseTopic`。
-- secondary 会定时重试抢锁；抢锁成功后升级为 primary 并开始通配订阅。
+- [x] 通过 `pg advisory lock` 决定 primary / secondary。
+- [x] primary 订阅 `device/+/+/#`，secondary 默认不订阅通配主题，仅在 request 时临时订阅 `responseTopic`。
+- [x] request 发送前先写 `device_messages(direction=out)`。
+- [x] 入站消息处理顺序：`self-echo` -> pending response 匹配 ->（若为 primary）通用 ingest。
+- [x] 通用 ingest 中：
+  - `request / set / action` 跳过入站落库。
+  - `report` 更新 `devices.state / stateUpdatedAt / isOnline` 并写入 `device_messages(direction=in)`。
 
-2. 出站 request（direction = out）
+2. 已确认逻辑风险（P0，已修复）
 
-- 发送 request 前先写 `device_messages` 一条出站记录：
-  - `direction = out`
-  - `topic = requestTopic`
-  - `payload = requestPayload`
-  - `parsedMessageId = request message id`
-- 有 response 的 request 采用“先订阅/注册 waiter，再发布”顺序，避免快速响应导致 waiter 漏接而误超时。
+- [x] `expectedPayloadMatches` 恢复生效，`matchesExpectedPayload` 按路径逐项深比较。
+  - 结果：同一 `responseTopic` 并发命令场景可按 payload 精确匹配，降低错配风险。
+- [x] timeout 清理路径中的退订改为“安全退订”（错误隔离 + 不阻断 `reject`）。
+  - 结果：退订失败不会导致 timeout Promise 悬挂。
+- [x] pending response 命中后改为“先 resolve，再异步安全退订”。
+  - 结果：退订失败不再阻断命令成功完成路径。
 
-3. 入站消息主流程
+3. 已确认冗余/可清理项（P1）
 
-- 消息到达后先做 `self-echo` 过滤（忽略本进程刚发布后回环收到的同内容消息）。
-- 然后优先匹配 pending response：
-  - 命中时立即按 response 路径入库一次（带 `responseMessageId`）并返回。
-  - 该路径用于保证 response 不丢失且不再重复进入通用 ingest。
-- 未命中 pending 时：
-  - secondary 直接返回（不写库）。
-  - primary 进入通用 ingest。
+- [x] `getPayloadValueByPath` 已用于 `expectedPayloadMatches` 路径匹配。
+- [x] `matchesExpectedPayload` 已恢复真实匹配逻辑并移除占位写法。
 
-4. 通用 ingest（仅 primary）
+4. 当前“结果保证”修正
 
-- 解析 topic 中 deviceId，读取设备与模板。
-- 按模板 `topicTemplate` 匹配消息定义。
-- 匹配不到：按未知入站消息落库（`parsedMessageId` 为空）。
-- 匹配到 `request / set / action`：跳过入站落库（云到设备下发消息不作为设备上行存档）。
-- 匹配到 `report`：更新 `devices.state / stateUpdatedAt / isOnline`，并写一条入站消息。
-
-5. 当前结果保证
-
-- request 仅保留出站记录，不再出现额外入站重复。
-- response 命中 pending 后会入库，并用于完成命令状态流转。
-- telemetry 等 report 仅由 primary ingest，避免多进程重复写入。
+- [x] telemetry/report 仅由 primary ingest，可避免多实例重复写入。
+- [x] response 路径“单次落库”在同 topic 并发命令场景下可结合 payload 匹配进行精确归属。
+- [x] request/response 的完成路径已避免被退订异常阻断。

@@ -1,31 +1,50 @@
 import { Aedes } from 'aedes'
 import { connect, MqttClient } from 'mqtt'
 import * as $ from 'drizzle-orm'
-import type { Client as PgClient } from 'pg'
 
 import { db, schema } from '@/lib/db'
 import { renderTopicTemplate, toStateRecord } from '@/lib/device-templates/protocol'
 import { createLogger } from '@/lib/logger'
+import { isDeepStrictEqual } from 'node:util'
 
 const log = createLogger('mqtt-runtime')
 
-type PendingRequest = {
+interface ExpectedPayloadMatch {
+  path: string
+  value: unknown
+}
+
+interface MqttResponse {
+  topic: string
+  payload: Record<string, unknown>
+}
+
+interface PublishRequestAndWaitForResponseInput {
+  commandId: number
+  messageId: string
+  deviceId: number
+  requestTopic: string
+  responseTopic?: string
+  responseMessageId?: string
+  expectedPayloadMatches?: ExpectedPayloadMatch[]
+  payload: unknown
+  timeoutMs: number
+}
+
+interface PendingRequest {
   commandId: number
   deviceId: number
   expectedTopic: string
-  expectedPayloadMatches?: Array<{ path: string, value: unknown }>
+  expectedPayloadMatches?: ExpectedPayloadMatch[]
   responseMessageId?: string
   temporarySubscription?: boolean
-  resolve: (result: { topic: string, payload: Record<string, unknown> }) => void
+  resolve: (result: MqttResponse) => void
   reject: (error: Error) => void
   timer: NodeJS.Timeout
 }
 
 class MqttRuntime {
-  private started = false
-  private starting = false
   private isPrimaryIngestor = true
-  private roleLockClient: PgClient | null = null
   private roleElectionTimer: NodeJS.Timeout | null = null
   private broker: Aedes | null = null
   private client: MqttClient | null = null
@@ -51,7 +70,7 @@ class MqttRuntime {
     this.recentOutgoing.set(fingerprint, now)
 
     if (this.recentOutgoing.size > 500) {
-      const cutoff = now - 10_000
+      const cutoff = now - 10000
       for (const [key, ts] of this.recentOutgoing.entries()) {
         if (ts < cutoff) {
           this.recentOutgoing.delete(key)
@@ -107,7 +126,6 @@ class MqttRuntime {
     const locked = Boolean(result.rows[0]?.locked)
 
     if (locked) {
-      this.roleLockClient = roleClient
       this.isPrimaryIngestor = true
       this.stopRoleElectionLoop()
 
@@ -129,32 +147,32 @@ class MqttRuntime {
     }
 
     this.isPrimaryIngestor = false
-    this.roleLockClient = null
     log.warn({ error }, 'lost mqtt primary ingestor lock, switched to secondary')
 
     if (this.client?.connected) {
-      this.client.unsubscribe('device/+/+/#')
-      log.info({ topic: 'device/+/+/#' }, 'unsubscribed from wildcard topic after lock loss')
+      this.client.unsubscribeAsync('device/+/+/#')
+        .then(() => {
+          log.info({ topic: 'device/+/+/#' }, 'unsubscribed from wildcard topic after lock loss')
+        })
+        .catch((unsubscribeError) => {
+          log.warn({ error: unsubscribeError, topic: 'device/+/+/#' }, 'failed to unsubscribe wildcard topic after lock loss')
+        })
     }
 
     this.startRoleElectionLoop()
   }
 
   private startRoleElectionLoop() {
-    if (this.roleElectionTimer) {
-      return
-    }
+    if (this.roleElectionTimer) return
 
     this.roleElectionTimer = setInterval(async () => {
-      if (this.isPrimaryIngestor) {
-        return
-      }
+      if (this.isPrimaryIngestor) return
 
       try {
         await this.tryAcquirePrimaryRole()
 
         if (this.isPrimaryIngestor && this.client?.connected) {
-          this.client.subscribe('device/+/+/#')
+          await this.client.subscribeAsync('device/+/+/#')
           log.info({ topic: 'device/+/+/#' }, 'subscribed to device topics after promotion to primary')
         }
       }
@@ -165,40 +183,28 @@ class MqttRuntime {
   }
 
   private stopRoleElectionLoop() {
-    if (!this.roleElectionTimer) {
-      return
-    }
+    if (!this.roleElectionTimer) return
 
     clearInterval(this.roleElectionTimer)
     this.roleElectionTimer = null
   }
 
+  private async unsubscribeTopicSafely(topic: string, reason: string) {
+    try {
+      await this.client?.unsubscribeAsync(topic)
+    }
+    catch (error) {
+      log.warn({ error, topic, reason }, 'failed to unsubscribe mqtt topic')
+    }
+  }
+
+  startPromise: Promise<void> | null = null
+
   async start() {
-    if (this.started) {
-      log.debug('runtime already started')
-      return
-    }
+    if (this.startPromise) return this.startPromise
 
-    // Prevent concurrent starts
-    if (this.starting) {
-      log.debug('runtime startup already in progress')
-      // Wait for startup to complete by checking started flag
-      return new Promise<void>((resolve) => {
-        const check = setInterval(() => {
-          if (this.started) {
-            clearInterval(check)
-            resolve()
-          }
-        }, 100)
-        // Timeout after 30 seconds
-        setTimeout(() => {
-          clearInterval(check)
-          resolve()
-        }, 30000)
-      })
-    }
-
-    this.starting = true
+    const startTask = Promise.withResolvers<void>()
+    this.startPromise = startTask.promise
 
     const shouldStartEmbeddedBroker = process.env.MQTT_EMBEDDED_BROKER !== 'false'
     const mqttUrl = process.env.MQTT_URL || 'mqtt://127.0.0.1:1883'
@@ -247,12 +253,17 @@ class MqttRuntime {
 
     this.client = connect(mqttUrl)
 
-    this.client.on('connect', () => {
+    this.client.on('connect', async () => {
       log.info({ mqttUrl }, 'mqtt client connected')
 
       if (this.isPrimaryIngestor) {
-        this.client?.subscribe('device/+/+/#')
-        log.info({ topic: 'device/+/+/#' }, 'subscribed to device topics')
+        try {
+          await this.client?.subscribeAsync('device/+/+/#')
+          log.info({ topic: 'device/+/+/#' }, 'subscribed to device topics')
+        }
+        catch (subscribeError) {
+          log.error({ error: subscribeError, topic: 'device/+/+/#' }, 'failed to subscribe to device topics')
+        }
       }
       else {
         log.info('secondary instance connected without wildcard topic subscription')
@@ -279,22 +290,12 @@ class MqttRuntime {
       await this.handleIncomingMessage(topic, payload)
     })
 
-    this.started = true
-    this.starting = false
+    startTask.resolve()
+
     log.info('mqtt runtime started')
   }
 
-  async publishRequestAndWaitForResponse(input: {
-    commandId: number
-    messageId: string
-    deviceId: number
-    requestTopic: string
-    responseTopic?: string
-    responseMessageId?: string
-    expectedPayloadMatches?: Array<{ path: string, value: unknown }>
-    payload: unknown
-    timeoutMs: number
-  }) {
+  async publishRequestAndWaitForResponse(input: PublishRequestAndWaitForResponseInput) {
     await this.start()
 
     if (!this.client) {
@@ -313,12 +314,7 @@ class MqttRuntime {
         'publishing mqtt request command'
       )
 
-      await new Promise<void>((resolve, reject) => {
-        this.client?.publish(input.requestTopic, JSON.stringify(input.payload), (error) => {
-          if (error) reject(error)
-          else resolve()
-        })
-      })
+      await this.client?.publishAsync(input.requestTopic, JSON.stringify(input.payload))
 
       return {
         topic: input.requestTopic,
@@ -330,29 +326,21 @@ class MqttRuntime {
     const useTemporarySubscription = !this.isPrimaryIngestor
 
     if (useTemporarySubscription) {
-      await new Promise<void>((resolve, reject) => {
-        this.client?.subscribe(responseTopic, (error) => {
-          if (error) {
-            reject(error)
-            return
-          }
+      await this.client?.subscribeAsync(responseTopic)
 
-          log.debug({ responseTopic }, 'subscribed temporary response topic on secondary instance')
-          resolve()
-        })
-      })
+      log.debug({ responseTopic }, 'subscribed temporary response topic on secondary instance')
     }
 
-    const responsePromise = new Promise<{ topic: string, payload: Record<string, unknown> }>((resolve, reject) => {
+    const responsePromise = new Promise<MqttResponse>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingRequests.delete(input.commandId)
 
         if (useTemporarySubscription) {
-          this.client?.unsubscribe(responseTopic)
+          void this.unsubscribeTopicSafely(responseTopic, 'request timeout cleanup')
         }
 
         log.warn({ commandId: input.commandId }, 'mqtt request timed out waiting for response')
-        reject(new Error('命令响应超时'))
+        reject(new Error('Command response timed out'))
       }, input.timeoutMs)
 
       this.pendingRequests.set(input.commandId, {
@@ -381,12 +369,7 @@ class MqttRuntime {
     )
 
     try {
-      await new Promise<void>((resolve, reject) => {
-        this.client?.publish(input.requestTopic, JSON.stringify(input.payload), (error) => {
-          if (error) reject(error)
-          else resolve()
-        })
-      })
+      await this.client?.publishAsync(input.requestTopic, JSON.stringify(input.payload))
     }
     catch (error) {
       const pending = this.pendingRequests.get(input.commandId)
@@ -396,7 +379,7 @@ class MqttRuntime {
       }
 
       if (useTemporarySubscription) {
-        this.client?.unsubscribe(responseTopic)
+        await this.unsubscribeTopicSafely(responseTopic, 'publish failure cleanup')
       }
 
       throw error
@@ -414,7 +397,7 @@ class MqttRuntime {
       return
     }
 
-    const responseMatch = this.resolvePendingRequest(topic, payload)
+    const responseMatch = await this.resolvePendingRequest(topic, payload)
 
     if (responseMatch) {
       await this.saveIncomingMessage(
@@ -438,7 +421,7 @@ class MqttRuntime {
     }
   }
 
-  private resolvePendingRequest(topic: string, payload: Record<string, unknown>) {
+  private async resolvePendingRequest(topic: string, payload: Record<string, unknown>) {
     for (const [commandId, pending] of this.pendingRequests) {
       if (pending.expectedTopic === topic) {
         if (!this.matchesExpectedPayload(payload, pending.expectedPayloadMatches)) {
@@ -448,12 +431,13 @@ class MqttRuntime {
         clearTimeout(pending.timer)
         this.pendingRequests.delete(commandId)
 
-        if (pending.temporarySubscription) {
-          this.client?.unsubscribe(pending.expectedTopic)
-        }
-
         log.info({ commandId, topic }, 'matched mqtt response for pending command')
         pending.resolve({ topic, payload })
+
+        if (pending.temporarySubscription) {
+          void this.unsubscribeTopicSafely(pending.expectedTopic, 'pending response resolved cleanup')
+        }
+
         return {
           commandId,
           deviceId: pending.deviceId,
@@ -484,17 +468,15 @@ class MqttRuntime {
     return current
   }
 
-  private matchesExpectedPayload(payload: Record<string, unknown>, expectedMatches?: Array<{ path: string, value: unknown }>) {
-    // if (!expectedMatches?.length) {
-    //   return true
-    // }
+  private matchesExpectedPayload(payload: Record<string, unknown>, expectedMatches?: ExpectedPayloadMatch[]) {
+    if (!expectedMatches?.length) {
+      return true
+    }
 
-    // return expectedMatches.every((match) => {
-    //   const actual = this.getPayloadValueByPath(payload, match.path)
-    //   return isDeepStrictEqual(actual, match.value)
-    // })
-    void [payload, expectedMatches]
-    return true
+    return expectedMatches.every((match) => {
+      const actual = this.getPayloadValueByPath(payload, match.path)
+      return isDeepStrictEqual(actual, match.value)
+    })
   }
 
   private async ingestDeviceMessage(topic: string, payload: Record<string, unknown>) {
