@@ -5,6 +5,8 @@ import { PageToolbar } from '@/comps/page-toolbar'
 import { DashboardSidebar } from '@/comps/dashboard/sidebar'
 import { requireSessionOrRedirect } from '@/lib/auth/server'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {

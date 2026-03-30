@@ -491,6 +491,30 @@ export async function getDeviceDetailById(id: number) {
   }
 }
 
+export async function getDeviceDetailByProductAndDeviceId(product: string, deviceId: string) {
+  const { user } = await getSession()
+
+  const [deviceRef] = await db
+    .select({ id: schema.devices.id })
+    .from(schema.devices)
+    .innerJoin(schema.deviceTemplates, $.eq(schema.deviceTemplates.id, schema.devices.templateId))
+    .where(
+      $.and(
+        $.eq(schema.deviceTemplates.name, product),
+        $.eq(schema.devices.deviceId, deviceId),
+        $.eq(schema.devices.createdBy, user.id),
+        $.isNull(schema.devices.deletedAt)
+      )
+    )
+    .limit(1)
+
+  if (!deviceRef) {
+    unauthorized()
+  }
+
+  return getDeviceDetailById(deviceRef.id)
+}
+
 export type DefineDevice = Pick<NewDevice, 'deviceId' | 'name' | 'description' | 'templateId' | 'createdBy'>
 
 export async function createDevice(device: DefineDevice) {

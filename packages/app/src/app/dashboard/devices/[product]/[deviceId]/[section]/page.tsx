@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 
 import { DeviceDetailTabs } from '@/comps/dashboard/device-detail-tabs'
 import { ButtonLink } from '@/comps/ui/link'
-import { getDeviceDetailById } from '@/lib/devices'
 import { getRequestMessages } from '@/lib/device-templates/protocol'
+import { getDeviceDetailByProductAndDeviceId } from '@/lib/devices'
 
 const sections = ['properties', 'status', 'messages'] as const
 
@@ -17,15 +17,15 @@ function isSection(value: string): value is Section {
 export default async function DeviceDetailSectionPage({
   params,
 }: {
-  params: Promise<{ id: string, section: string }>
+  params: Promise<{ product: string, deviceId: string, section: string }>
 }) {
-  const { id, section } = await params
+  const { product, deviceId, section } = await params
 
   if (!isSection(section)) {
     notFound()
   }
 
-  const { device, creator, template } = await getDeviceDetailById(parseInt(id))
+  const { device, creator, template } = await getDeviceDetailByProductAndDeviceId(product, deviceId)
   const requestMessages = template ? getRequestMessages(template.protocol) : []
 
   return (

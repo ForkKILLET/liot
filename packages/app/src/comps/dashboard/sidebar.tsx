@@ -6,6 +6,7 @@ import { LayoutDashboard, Server } from 'lucide-react'
 import { ButtonLink } from '../ui/link'
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { getDeviceDetailPath } from '@/lib/devices/url'
 
 interface SidebarItemDef {
   title: string
@@ -28,23 +29,36 @@ const items: SidebarItemDef[] = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const detailMatch = pathname.match(/^\/dashboard\/devices\/(\d+)(?:\/(properties|status|messages))?$/)
-  const detailDeviceId = detailMatch?.[1]
-  const detailSection = (detailMatch?.[2] ?? 'properties') as 'properties' | 'status' | 'messages'
+  const detailMatch = pathname.match(/^\/dashboard\/devices\/([^/]+)\/([^/]+)(?:\/(properties|status|messages))?$/)
+  const detailProduct = detailMatch?.[1]
+  const detailDeviceId = detailMatch?.[2]
+  const detailSection = (detailMatch?.[3] ?? 'properties') as 'properties' | 'status' | 'messages'
 
-  const sectionItems = detailDeviceId
+  const decodeSegment = (value: string) => {
+    try {
+      return decodeURIComponent(value)
+    }
+    catch {
+      return value
+    }
+  }
+
+  const product = detailProduct ? decodeSegment(detailProduct) : null
+  const deviceId = detailDeviceId ? decodeSegment(detailDeviceId) : null
+
+  const sectionItems = product && deviceId
     ? [
       {
         title: '属性',
-        href: `/dashboard/devices/${detailDeviceId}/properties`,
+        href: getDeviceDetailPath(product, deviceId, 'properties'),
       },
       {
         title: '状态',
-        href: `/dashboard/devices/${detailDeviceId}/status`,
+        href: getDeviceDetailPath(product, deviceId, 'status'),
       },
       {
         title: '消息历史',
-        href: `/dashboard/devices/${detailDeviceId}/messages`,
+        href: getDeviceDetailPath(product, deviceId, 'messages'),
       },
     ]
     : []
@@ -55,9 +69,9 @@ export function DashboardSidebar() {
         <SidebarItem key={item.href} item={item} pathname={pathname} />
       ))}
 
-      {detailDeviceId && (
+      {product && deviceId && (
         <div className='mt-4 border-t border-border pt-3'>
-          <div className='px-2 pb-2 text-xs text-muted-foreground'>设备 #{detailDeviceId}</div>
+          <div className='px-2 pb-2 text-xs text-muted-foreground'>{product}/{deviceId}</div>
           <div className='flex flex-col gap-1'>
             {sectionItems.map((sectionItem) => {
               const active = sectionItem.href.endsWith(`/${detailSection}`)

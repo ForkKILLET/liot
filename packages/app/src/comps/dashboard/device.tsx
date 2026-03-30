@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { type Device } from '@/lib/db/schema'
+import { getDeviceDetailPath } from '@/lib/devices/url'
 import { DescriptionItem, Descriptions } from '../ui/descriptions'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 
@@ -12,8 +13,12 @@ export function Device({
   device,
   templateName,
 }: DeviceProps) {
+  const href = templateName
+    ? getDeviceDetailPath(templateName, device.deviceId)
+    : '/dashboard/devices'
+
   return (
-    <Link href={`/dashboard/devices/${device.id}`}>
+    <Link href={href}>
       <Card className='border-border bg-card transition-all hover:border-border hover:bg-accent hover:shadow-lg'>
         <CardHeader className='pb-2'>
           <div className='flex items-center justify-between gap-2'>

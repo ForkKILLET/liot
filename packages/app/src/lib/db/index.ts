@@ -20,6 +20,8 @@ function createDb() {
 
 export const db = createDb()
 
-initDb(db)
+if (process.env.NEXT_PHASE !== 'phase-production-build') {
+  void initDb(db)
+}
 
 export { schema }

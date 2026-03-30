@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Device as DeviceType, DeviceTemplate } from '@/lib/db/schema'
 import { DeviceListToolbar } from '@/comps/dashboard/device-list-toolbar'
 import { Device } from '@/comps/dashboard/device'
+import { getDeviceDetailPath } from '@/lib/devices/url'
 
 export type DeviceListClientProps = {
   devices: DeviceType[]
@@ -78,12 +79,18 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredDevices.map(device => (
+                    {filteredDevices.map((device) => {
+                      const templateName = templateNameById.get(device.templateId)
+                      const href = templateName
+                        ? getDeviceDetailPath(templateName, device.deviceId)
+                        : '/dashboard/devices'
+
+                      return (
                       <tr key={device.id} className='border-b border-border/80'>
                         <td className='py-3 pr-4 text-foreground/80'>{device.deviceId}</td>
                         <td className='py-3 pr-4'>
                           <Link
-                            href={`/dashboard/devices/${device.id}`}
+                            href={href}
                             className='font-medium text-foreground underline-offset-2 hover:underline'
                           >
                             {device.name}
@@ -101,7 +108,8 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
                           <span className='line-clamp-1'>{device.description || '-'}</span>
                         </td>
                       </tr>
-                    ))}
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
