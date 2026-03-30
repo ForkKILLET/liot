@@ -568,9 +568,10 @@ class MqttRuntime {
     }
 
     if (matchedMessage.type === 'report' && responseMessageIds.has(matchedMessage.id)) {
+      await this.saveIncomingMessage(resolvedDevice.id, topic, payload, matchedMessage.id)
       log.debug(
         { deviceId: resolvedDevice.id, topic, messageId: matchedMessage.id },
-        'skip persisting incoming response message in generic ingest path'
+        'incoming response message persisted in generic ingest path'
       )
       return true
     }
