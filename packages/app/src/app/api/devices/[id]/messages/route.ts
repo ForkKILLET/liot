@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { getDeviceMessagesHistory } from '@/lib/devices'
+import { DeviceMessagesHistoryResponse } from '@/lib/api/contracts'
 
 export async function GET(
   request: Request,
@@ -11,7 +12,7 @@ export async function GET(
     const deviceId = Number(id)
 
     if (!Number.isFinite(deviceId)) {
-      return NextResponse.json({ success: false, message: '无效的设备 ID' }, { status: 400 })
+      return NextResponse.json<DeviceMessagesHistoryResponse>({ success: false, message: '无效的设备 ID' }, { status: 400 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -19,7 +20,7 @@ export async function GET(
     const pageSize = Number(searchParams.get('pageSize') || 20)
 
     if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-      return NextResponse.json({ success: false, message: '无效的分页参数' }, { status: 400 })
+      return NextResponse.json<DeviceMessagesHistoryResponse>({ success: false, message: '无效的分页参数' }, { status: 400 })
     }
 
     const data = await getDeviceMessagesHistory({
@@ -28,13 +29,21 @@ export async function GET(
       pageSize,
     })
 
-    return NextResponse.json({
+    const responseData = {
+      ...data,
+      messages: data.messages.map((message) => ({
+        ...message,
+        createdAt: message.createdAt.toISOString(),
+      })),
+    }
+
+    return NextResponse.json<DeviceMessagesHistoryResponse>({
       success: true,
-      data,
+      data: responseData,
     })
   }
   catch (error) {
     const message = error instanceof Error ? error.message : '消息历史查询失败'
-    return NextResponse.json({ success: false, message }, { status: 500 })
+    return NextResponse.json<DeviceMessagesHistoryResponse>({ success: false, message }, { status: 500 })
   }
 }

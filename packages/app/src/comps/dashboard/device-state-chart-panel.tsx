@@ -21,6 +21,7 @@ import {
 
 import { Button } from '@/comps/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/comps/ui/card'
+import { DeviceStateHistoryResponse } from '@/lib/api/contracts'
 
 type NumberFieldMeta = {
   field: string
@@ -138,13 +139,7 @@ export function DeviceStateChartPanel({ deviceId, selectedFields }: DeviceStateC
       }
 
       const response = await fetch(`/api/devices/${deviceId}/state-history?${params.toString()}`)
-      const payload = await response.json() as {
-        success: boolean
-        data?: {
-          meta: NumberFieldMeta[]
-          points: Array<{ ts: string, values: Record<string, number> }>
-        }
-      }
+      const payload = await response.json() as DeviceStateHistoryResponse
 
       if (!response.ok || !payload.success || !payload.data) {
         setPoints([])

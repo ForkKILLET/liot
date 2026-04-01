@@ -1,31 +1,24 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
 import { DeviceMessageHistory } from './device-message-history'
+import { DeviceMessagesHistoryResponse, DeviceMessageHistoryItem } from '@/lib/api/contracts'
 
-type DeviceMessageRecord = {
-  id: number
-  direction: 'in' | 'out'
-  topic: string
-  payload: unknown
-  messageId?: string
-  messageType?: 'report' | 'request' | 'response' | 'set' | 'action'
-  isWaiting?: boolean
-  isAbnormal: boolean
-  abnormalReason?: string
-  createdAt: string
-}
+type DeviceMessageRecord = DeviceMessageHistoryItem
 
 export type DeviceMessageHistoryContainerProps = {
   deviceId: number
   pageSize?: number
+  onLoadingChange?: (isLoading: boolean) => void
 }
 
 export function DeviceMessageHistoryContainer({
   deviceId,
   pageSize = 20,
+  onLoadingChange,
 }: DeviceMessageHistoryContainerProps) {
   const [page, setPage] = useState(1)
+  const [loadingCount, setLoadingCount] = useState(0)
   const [messagesData, setMessagesData] = useState<{
     messages: DeviceMessageRecord[]
     total: number
@@ -34,24 +27,16 @@ export function DeviceMessageHistoryContainer({
     totalPages: number
   } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const isLoading = isPending || loadingCount > 0
 
-  const loadPage = (targetPage: number) => {
-    startTransition(async () => {
+  const doLoadPage = useCallback(async (targetPage: number) => {
+    try {
       const response = await fetch(
         `/api/devices/${deviceId}/messages?page=${targetPage}&pageSize=${pageSize}`,
         { method: 'GET' }
       )
 
-      const payload = await response.json() as {
-        success: boolean
-        data?: {
-          messages: DeviceMessageRecord[]
-          total: number
-          page: number
-          pageSize: number
-          totalPages: number
-        }
-      }
+      const payload = await response.json() as DeviceMessagesHistoryResponse
 
       if (!response.ok || !payload.success || !payload.data) {
         setMessagesData({
@@ -65,13 +50,24 @@ export function DeviceMessageHistoryContainer({
       }
 
       setMessagesData(payload.data)
-    })
-  }
+    }
+    finally {
+      setLoadingCount((count) => Math.max(0, count - 1))
+    }
+  }, [deviceId, pageSize])
+
+  const loadPage = useCallback((targetPage: number) => {
+    setLoadingCount((count) => count + 1)
+    startTransition(() => void doLoadPage(targetPage))
+  }, [doLoadPage])
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading)
+  }, [isLoading, onLoadingChange])
 
   useEffect(() => {
     loadPage(1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceId, pageSize])
+  }, [deviceId, pageSize, loadPage])
 
   useEffect(() => {
     const onRefresh = (event: Event) => {
@@ -84,15 +80,14 @@ export function DeviceMessageHistoryContainer({
     return () => {
       window.removeEventListener('device-messages:refresh', onRefresh)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceId, page])
+  }, [deviceId, page, loadPage])
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage)
     loadPage(newPage)
   }
 
-  if (!messagesData && isPending) {
+  if (!messagesData && isLoading) {
     return (
       <div className='flex items-center justify-center py-12'>
         <div className='text-sm text-muted-foreground'>加载消息历史中...</div>
@@ -112,7 +107,7 @@ export function DeviceMessageHistoryContainer({
       pageSize={messagesData.pageSize}
       totalPages={messagesData.totalPages}
       onPageChange={handlePageChange}
-      isLoading={isPending}
+      isLoading={isLoading}
     />
   )
 }

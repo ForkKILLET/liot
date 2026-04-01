@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { enqueueDeviceRequestCommand } from '@/lib/devices'
+import { DeviceCommandEnqueueResponse } from '@/lib/api/contracts'
 
 export async function POST(
   _request: Request,
@@ -11,7 +12,7 @@ export async function POST(
     const deviceId = Number(id)
 
     if (!Number.isFinite(deviceId)) {
-      return NextResponse.json({ success: false, message: '无效的设备 ID' }, { status: 400 })
+      return NextResponse.json<DeviceCommandEnqueueResponse>({ success: false, message: '无效的设备 ID' }, { status: 400 })
     }
 
     const result = await enqueueDeviceRequestCommand({
@@ -19,13 +20,13 @@ export async function POST(
       messageId,
     })
 
-    return NextResponse.json({
+    return NextResponse.json<DeviceCommandEnqueueResponse>({
       success: true,
       data: result,
     })
   }
   catch (error) {
     const message = error instanceof Error ? error.message : '命令执行失败'
-    return NextResponse.json({ success: false, message }, { status: 500 })
+    return NextResponse.json<DeviceCommandEnqueueResponse>({ success: false, message }, { status: 500 })
   }
 }

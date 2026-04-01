@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { getDeviceStateHistory } from '@/lib/devices'
+import { DeviceStateHistoryResponse } from '@/lib/api/contracts'
 
 export const runtime = 'nodejs'
 
@@ -13,7 +14,7 @@ export async function GET(
     const deviceId = Number(id)
 
     if (!Number.isFinite(deviceId)) {
-      return NextResponse.json({ success: false, message: '无效的设备 ID' }, { status: 400 })
+      return NextResponse.json<DeviceStateHistoryResponse>({ success: false, message: '无效的设备 ID' }, { status: 400 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -24,7 +25,7 @@ export async function GET(
       .filter(Boolean)
 
     if (!fields.length) {
-      return NextResponse.json({ success: false, message: '至少选择一个字段' }, { status: 400 })
+      return NextResponse.json<DeviceStateHistoryResponse>({ success: false, message: '至少选择一个字段' }, { status: 400 })
     }
 
     const windowMinutesParam = searchParams.get('windowMinutes')
@@ -52,13 +53,21 @@ export async function GET(
       limit: safeLimit,
     })
 
-    return NextResponse.json({
+    const responseData = {
+      ...data,
+      points: data.points.map((point) => ({
+        ...point,
+        ts: point.ts.toISOString(),
+      })),
+    }
+
+    return NextResponse.json<DeviceStateHistoryResponse>({
       success: true,
-      data,
+      data: responseData,
     })
   }
   catch (error) {
     const message = error instanceof Error ? error.message : '查询状态历史失败'
-    return NextResponse.json({ success: false, message }, { status: 500 })
+    return NextResponse.json<DeviceStateHistoryResponse>({ success: false, message }, { status: 500 })
   }
 }

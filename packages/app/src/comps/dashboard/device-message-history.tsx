@@ -113,6 +113,14 @@ export function DeviceMessageHistory({
 }: DeviceMessageHistoryProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center py-12'>
+        <div className='text-sm text-muted-foreground'>加载消息历史中...</div>
+      </div>
+    )
+  }
+
   if (total === 0) {
     return (
       <div className='text-center py-12'>

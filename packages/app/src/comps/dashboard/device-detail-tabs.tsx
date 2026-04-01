@@ -52,6 +52,7 @@ export function DeviceDetailTabs({
   requestMessages,
 }: DeviceDetailTabsProps) {
   const [selectedChartFields, setSelectedChartFields] = useState<string[]>([])
+  const [isMessagesRefreshing, setIsMessagesRefreshing] = useState(false)
 
   const createdAtDisplay = typeof device.createdAt === 'string'
     ? device.createdAt
@@ -185,6 +186,7 @@ export function DeviceDetailTabs({
             <Button
               size='sm'
               variant='outline'
+              disabled={isMessagesRefreshing}
               onClick={() => {
                 if (typeof window === 'undefined') return
                 window.dispatchEvent(new CustomEvent('device-messages:refresh', {
@@ -192,12 +194,16 @@ export function DeviceDetailTabs({
                 }))
               }}
             >
-              <RefreshCw className='mr-2 h-4 w-4' />
-              刷新
+              <RefreshCw className={`mr-2 h-4 w-4 ${isMessagesRefreshing ? 'animate-spin' : ''}`} />
+              {isMessagesRefreshing ? '刷新中...' : '刷新'}
             </Button>
           </CardHeader>
           <CardContent>
-            <DeviceMessageHistoryContainer deviceId={deviceId} pageSize={20} />
+            <DeviceMessageHistoryContainer
+              deviceId={deviceId}
+              pageSize={20}
+              onLoadingChange={setIsMessagesRefreshing}
+            />
           </CardContent>
         </Card>
       )}

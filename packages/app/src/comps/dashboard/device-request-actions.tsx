@@ -6,6 +6,7 @@ import { Loader2, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/comps/ui/button'
+import { DeviceCommandEnqueueResponse } from '@/lib/api/contracts'
 
 type RequestAction = {
   id: string
@@ -128,17 +129,11 @@ export function DeviceRequestActions({ deviceId, requests }: DeviceRequestAction
         method: 'POST',
       })
 
-      const payload = await response.json() as {
-        success: boolean
-        message?: string
-        data?: {
-          commandId: number
-          status: string
-        }
-      }
+      const payload = await response.json() as DeviceCommandEnqueueResponse
 
       if (!response.ok || !payload.success) {
-        throw new Error(payload.message || '命令执行失败')
+        const message = payload.success ? '命令执行失败' : payload.message
+        throw new Error(message || '命令执行失败')
       }
 
       const commandId = payload.data?.commandId
