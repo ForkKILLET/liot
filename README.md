@@ -1,1 +1,1 @@
-./packages/frontend/README.md
+./packages/app/README.md
