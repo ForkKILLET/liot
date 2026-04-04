@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
-import { FunnelIcon, Grid3x3Icon, ListIcon, X } from 'lucide-react'
+import { FunnelIcon, Plus, X } from 'lucide-react'
 import { Button } from '@/comps/ui/button'
+import { ButtonLink } from '@/comps/ui/link'
 import { Input } from '@/comps/ui/input'
 import {
   DropdownMenu,
@@ -19,8 +20,9 @@ import { DeviceTemplate } from '@/lib/db/schema'
 
 export type DeviceListToolbarProps = {
   templates: DeviceTemplate[]
+  createHref?: string
+  createLabel?: string
   onFiltersChange: (filters: {
-    mode: 'grid' | 'list'
     templateId?: number
     search?: string
   }) => void
@@ -28,10 +30,11 @@ export type DeviceListToolbarProps = {
 
 export function DeviceListToolbar({
   templates,
+  createHref = '/dashboard/devices/new',
+  createLabel = '创建设备',
   onFiltersChange
 }: DeviceListToolbarProps) {
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const [mode, setMode] = useState<'grid' | 'list'>('grid')
   const [filterMenuOpen, setFilterMenuOpen] = useState(false)
   const [templateId, setTemplateId] = useState<string>('')
   const [search, setSearch] = useState<string>('')
@@ -50,20 +53,10 @@ export function DeviceListToolbar({
     return filters
   }, [templateId, search, templates])
 
-  const handleModeChange = (newMode: 'grid' | 'list') => {
-    setMode(newMode)
-    onFiltersChange({
-      mode: newMode,
-      templateId: templateId ? parseInt(templateId) : undefined,
-      search: search || undefined,
-    })
-  }
-
   const handleFilterChange = (newTemplateId: string, newSearch: string) => {
     setTemplateId(newTemplateId)
     setSearch(newSearch)
     onFiltersChange({
-      mode,
       templateId: newTemplateId ? parseInt(newTemplateId) : undefined,
       search: newSearch || undefined,
     })
@@ -86,26 +79,9 @@ export function DeviceListToolbar({
     <div className='space-y-4'>
       <div className='flex items-center justify-between gap-4'>
         <div className='flex gap-2'>
-          <Button
-            variant={mode === 'grid' ? 'default' : 'outline'}
-            size='sm'
-            onClick={() => handleModeChange('grid')}
-            title='卡片模式'
-          >
-            <Grid3x3Icon className='h-4 w-4' />
-          </Button>
-          <Button
-            variant={mode === 'list' ? 'default' : 'outline'}
-            size='sm'
-            onClick={() => handleModeChange('list')}
-            title='列表模式'
-          >
-            <ListIcon className='h-4 w-4' />
-          </Button>
-
           <DropdownMenu open={filterMenuOpen} onOpenChange={setFilterMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <Button variant='outline' size='sm' className='gap-2'>
+              <Button variant='outline' className='h-9 gap-2'>
                 <FunnelIcon className='h-4 w-4' />
                 筛选
               </Button>
@@ -140,9 +116,7 @@ export function DeviceListToolbar({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
 
-        <div className='flex flex-1 justify-end gap-3 sm:flex-row'>
           <Input
             ref={searchInputRef}
             type='text'
@@ -151,6 +125,12 @@ export function DeviceListToolbar({
             onChange={(e) => handleFilterChange(templateId, e.target.value)}
             className='w-full max-w-md'
           />
+        </div>
+
+        <div className='flex flex-1 items-center justify-end gap-3 sm:flex-row'>
+          <ButtonLink href={createHref} icon={Plus} className='h-9 shrink-0'>
+            {createLabel}
+          </ButtonLink>
         </div>
       </div>
 

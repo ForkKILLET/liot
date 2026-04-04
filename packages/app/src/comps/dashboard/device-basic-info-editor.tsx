@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
-import { Button } from '@/comps/ui/button'
 import { Input } from '@/comps/ui/input'
 import { Textarea } from '@/comps/ui/textarea'
 import { updateDeviceBasicInfo } from '@/lib/devices'
+import { Button } from '@/comps/ui/button'
+import { Save } from 'lucide-react'
 
 export type DeviceBasicInfoEditorProps = {
   deviceId: number
@@ -95,7 +96,7 @@ export function DeviceBasicInfoEditor({
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder='输入设备描述（可选）'
+            placeholder='输入设备描述'
             maxLength={500}
             rows={3}
             className='min-h-9'
@@ -103,12 +104,13 @@ export function DeviceBasicInfoEditor({
         </div>
       </div>
 
-      <div className='flex justify-end'>
+      <div>
         <Button
           onClick={handleSave}
           disabled={isSaving || !isDirty}
           variant={isDirty ? 'default' : 'outline'}
         >
+          <Save className='h-4 w-4' />
           {isSaving ? '保存中...' : '保存修改'}
         </Button>
       </div>

@@ -9,6 +9,7 @@ import { DeviceStateFields } from '@/comps/dashboard/device-state-fields'
 import { DeviceDeleteButton } from '@/comps/dashboard/device-delete-button'
 import { DeviceMessageHistoryContainer } from '@/comps/dashboard/device-message-history-container'
 import { DeviceStateChartPanel } from '@/comps/dashboard/device-state-chart-panel'
+import { DeviceOnlineBadge } from '@/comps/dashboard/device-online-badge'
 import { DeviceTemplate } from '@/lib/db/schema'
 import { RefreshCw } from 'lucide-react'
 
@@ -134,18 +135,7 @@ export function DeviceDetailTabs({
                   <div className='grid grid-cols-[7rem_1fr] gap-x-4 gap-y-3'>
                     <div className='flex h-9 items-center text-muted-foreground font-medium'>在线状态</div>
                     <div className='flex h-9 items-center'>
-                      <span
-                        className={`inline-flex items-center gap-2 ${
-                          device.isOnline ? 'text-emerald-400' : 'text-muted-foreground'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-2 w-2 rounded-full ${
-                            device.isOnline ? 'bg-emerald-400' : 'bg-muted'
-                          }`}
-                        />
-                        {device.isOnline ? '在线' : '离线'}
-                      </span>
+                      <DeviceOnlineBadge isOnline={device.isOnline} />
                     </div>
                     <div className='flex h-9 items-center text-muted-foreground font-medium'>状态更新时间</div>
                     <div className='flex h-9 items-center text-foreground'>
@@ -194,7 +184,7 @@ export function DeviceDetailTabs({
                 }))
               }}
             >
-              <RefreshCw className={`mr-2 h-4 w-4 ${isMessagesRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isMessagesRefreshing ? 'animate-spin' : ''}`} />
               {isMessagesRefreshing ? '刷新中...' : '刷新'}
             </Button>
           </CardHeader>

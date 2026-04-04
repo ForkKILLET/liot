@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { ArrowLeft, Radar } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import * as motion from 'framer-motion/client'
 
 import { cn } from '@/lib/utils'
@@ -25,13 +25,10 @@ export function SiteShell({
   footerClassName,
 }: SiteShellProps) {
   return (
-    <div className={cn('min-h-screen bg-background text-foreground', mainClassName)}>
-      <div className={cn('mx-auto flex min-h-screen max-w-screen flex-col py-8 sm:px-6 lg:px-8', containerClassName)}>
+    <div className={cn('h-screen bg-background text-foreground', mainClassName)}>
+      <div className={cn('flex flex-col h-full py-5 sm:px-6 lg:px-8', containerClassName)}>
         <header className={cn('flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between', headerClassName)}>
           <Link href='/' icon={false} className='flex items-center gap-3 text-foreground/90 transition hover:text-foreground'>
-            <span className='flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner shadow-primary/20'>
-              <Radar className='h-5 w-5' />
-            </span>
             <span className='text-xl font-semibold'>Liot</span>
           </Link>
 
@@ -40,11 +37,12 @@ export function SiteShell({
           </>}
         </header>
 
-        <main className='sm:px-2 lg:px-4'>
+        <main className='flex-1 sm:px-2 lg:px-4'>
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
+            className='h-full'
           >
             {children}
           </motion.div>

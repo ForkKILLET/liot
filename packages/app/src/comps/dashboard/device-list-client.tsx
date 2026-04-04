@@ -1,19 +1,19 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
-import { Device as DeviceType, DeviceTemplate } from '@/lib/db/schema'
+import { useRouter } from 'next/navigation'
+import { Device, DeviceTemplate } from '@/lib/db/schema'
 import { DeviceListToolbar } from '@/comps/dashboard/device-list-toolbar'
-import { Device } from '@/comps/dashboard/device'
+import { DeviceOnlineBadge } from '@/comps/dashboard/device-online-badge'
 import { getDeviceDetailPath } from '@/lib/devices/url'
 
 export type DeviceListClientProps = {
-  devices: DeviceType[]
+  devices: Device[]
   templates: DeviceTemplate[]
 }
 
 export function DeviceListClient({ devices, templates }: DeviceListClientProps) {
-  const [mode, setMode] = useState<'grid' | 'list'>('grid')
+  const router = useRouter()
   const [templateId, setTemplateId] = useState<number>()
   const [search, setSearch] = useState<string>()
 
@@ -39,7 +39,6 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
       <DeviceListToolbar
         templates={templates}
         onFiltersChange={(filters) => {
-          setMode(filters.mode)
           setTemplateId(filters.templateId)
           setSearch(filters.search)
         }}
@@ -49,71 +48,52 @@ export function DeviceListClient({ devices, templates }: DeviceListClientProps) 
         ? (
           <p className='text-sm text-muted-foreground'>
             {devices.length === 0
-              ? '暂无设备，点击上方添加第一个设备。'
+              ? '暂无设备，点击工具栏创建第一个设备。'
               : '没有匹配的设备，请调整筛选条件。'}
           </p>
         )
         : (
-          mode === 'grid'
-            ? (
-              <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
-                {filteredDevices.map(device => (
-                  <Device
-                    key={device.id}
-                    device={device}
-                    templateName={templateNameById.get(device.templateId)}
-                  />
-                ))}
-              </div>
-            )
-            : (
-              <div className='overflow-x-auto'>
-                <table className='w-full text-sm'>
-                  <thead>
-                    <tr className='border-b border-border text-left text-muted-foreground'>
-                      <th className='py-3 pr-4 font-medium'>设备 ID</th>
-                      <th className='py-3 pr-4 font-medium'>名称</th>
-                      <th className='py-3 pr-4 font-medium'>型号</th>
-                      <th className='py-3 pr-4 font-medium'>状态</th>
-                      <th className='py-3 font-medium'>描述</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDevices.map((device) => {
-                      const templateName = templateNameById.get(device.templateId)
-                      const href = templateName
-                        ? getDeviceDetailPath(templateName, device.deviceId)
-                        : '/dashboard/devices'
+          <div className='overflow-x-auto'>
+            <table className='w-full text-sm'>
+              <thead>
+                <tr className='border-b border-border text-left text-muted-foreground'>
+                  <th className='py-3 pr-4 font-medium'>型号</th>
+                  <th className='py-3 pr-4 font-medium'>设备 ID</th>
+                  <th className='py-3 pr-4 font-medium'>名称</th>
+                  <th className='py-3 pr-4 font-medium'>状态</th>
+                  <th className='py-3 font-medium'>描述</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDevices.map((device) => {
+                  const templateName = templateNameById.get(device.templateId)
+                  const href = templateName
+                    ? getDeviceDetailPath(templateName, device.deviceId)
+                    : '/dashboard/devices'
 
-                      return (
-                      <tr key={device.id} className='border-b border-border/80'>
-                        <td className='py-3 pr-4 text-foreground/80'>{device.deviceId}</td>
-                        <td className='py-3 pr-4'>
-                          <Link
-                            href={href}
-                            className='font-medium text-foreground underline-offset-2 hover:underline'
-                          >
-                            {device.name}
-                          </Link>
-                        </td>
-                        <td className='py-3 pr-4 text-foreground/80'>
-                          {templateNameById.get(device.templateId) ?? '-'}
-                        </td>
-                        <td className='py-3 pr-4'>
-                          <span className={device.isOnline ? 'text-emerald-400' : 'text-muted-foreground'}>
-                            {device.isOnline ? '在线' : '离线'}
-                          </span>
-                        </td>
-                        <td className='max-w-[28rem] py-3 text-muted-foreground'>
-                          <span className='line-clamp-1'>{device.description || '-'}</span>
-                        </td>
-                      </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )
+                  return (
+                    <tr
+                      key={device.id}
+                      className='cursor-pointer border-b border-border/80 transition-colors hover:bg-muted/20'
+                      onClick={() => router.push(href)}
+                    >
+                      <td className='py-3 pr-4 text-foreground'>
+                        {templateNameById.get(device.templateId)}
+                      </td>
+                      <td className='py-3 pr-4 text-foreground'>{device.deviceId}</td>
+                      <td className='py-3 pr-4 text-foreground'>{device.name}</td>
+                      <td className='py-3 pr-4'>
+                        <DeviceOnlineBadge isOnline={device.isOnline} />
+                      </td>
+                      <td className='max-w-[28rem] py-3 text-foreground'>
+                        <span className='line-clamp-1'>{device.description || '-'}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )
       }
     </div>

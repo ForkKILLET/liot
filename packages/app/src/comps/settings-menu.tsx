@@ -35,15 +35,15 @@ export function SettingsMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={theme || 'system'} onValueChange={setTheme}>
           <DropdownMenuRadioItem value='light'>
-            <Sun className='mr-2 h-4 w-4' />
+            <Sun className='h-4 w-4' />
             浅色
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value='dark'>
-            <Moon className='mr-2 h-4 w-4' />
+            <Moon className='h-4 w-4' />
             深色
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value='system'>
-            <Palette className='mr-2 h-4 w-4' />
+            <Palette className='h-4 w-4' />
             自动
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

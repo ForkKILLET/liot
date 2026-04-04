@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Server } from 'lucide-react'
+import { LayoutDashboard, Server, Boxes } from 'lucide-react'
 
 import { ButtonLink } from '../ui/link'
 import React from 'react'
@@ -24,6 +24,11 @@ const items: SidebarItemDef[] = [
     title: '设备管理',
     href: '/dashboard/devices',
     Icon: Server,
+  },
+  {
+    title: '模板管理',
+    href: '/dashboard/templates',
+    Icon: Boxes,
   },
 ]
 
@@ -97,7 +102,12 @@ export function DashboardSidebar() {
 
 function SidebarItem({ item, pathname }: { item: typeof items[number], pathname: string }) {
   const isDevicesRoot = item.href === '/dashboard/devices'
-  const isActive = isDevicesRoot ? pathname.startsWith('/dashboard/devices') : pathname === item.href
+  const isTemplatesRoot = item.href === '/dashboard/templates'
+  const isActive = isDevicesRoot
+    ? pathname.startsWith('/dashboard/devices')
+    : isTemplatesRoot
+      ? pathname.startsWith('/dashboard/templates')
+      : pathname === item.href
 
   return (
     <ButtonLink

@@ -150,13 +150,7 @@ class MqttRuntime {
     log.warn({ error }, 'lost mqtt primary ingestor lock, switched to secondary')
 
     if (this.client?.connected) {
-      this.client.unsubscribeAsync('device/+/+/#')
-        .then(() => {
-          log.info({ topic: 'device/+/+/#' }, 'unsubscribed from wildcard topic after lock loss')
-        })
-        .catch((unsubscribeError) => {
-          log.warn({ error: unsubscribeError, topic: 'device/+/+/#' }, 'failed to unsubscribe wildcard topic after lock loss')
-        })
+      void this.unsubscribeTopicSafely('device/+/+/#', 'role demotion')
     }
 
     this.startRoleElectionLoop()
@@ -198,6 +192,40 @@ class MqttRuntime {
     }
   }
 
+  private async startEmbeddedBroker(port: number) {
+    try {
+      const net = await import('node:net')
+      const { Aedes } = await import('aedes')
+      this.broker = await Aedes.createBroker()
+      const server = net.createServer(this.broker.handle)
+
+      await new Promise<void>((resolve, reject) => {
+        const onError = (error: NodeJS.ErrnoException) => {
+          // If the port is already in use, we assume it's our broker from a previous instance and connect to it
+          if (error.code === 'EADDRINUSE') {
+            log.warn({ port }, 'mqtt broker port already in use, will connect to existing broker')
+            this.broker = null
+            resolve()
+          }
+          else {
+            reject(error)
+          }
+        }
+
+        server.once('error', onError)
+        server.listen(port, '0.0.0.0', () => {
+          server.removeListener('error', onError)
+          log.info({ port }, 'embedded mqtt broker started')
+          resolve()
+        })
+      })
+    }
+    catch (error) {
+      log.error({ error, port }, 'failed to start embedded mqtt broker, will attempt to connect to existing broker')
+      this.broker = null
+    }
+  }
+
   startPromise: Promise<void> | null = null
 
   async start() {
@@ -215,40 +243,7 @@ class MqttRuntime {
     await this.setupIngestRole()
 
     if (shouldStartEmbeddedBroker) {
-      try {
-        const net = await import('node:net')
-        this.broker = await Aedes.createBroker()
-        const server = net.createServer(this.broker.handle)
-
-        // Handle server errors (e.g., port already in use)
-        await new Promise<void>((resolve, reject) => {
-          const onError = (error: NodeJS.ErrnoException) => {
-            if (error.code === 'EADDRINUSE') {
-              log.warn({ port }, 'mqtt broker port already in use, will connect to existing broker')
-              // Don't reject, just resolve - we'll connect as client
-              this.broker = null
-              resolve()
-            }
-            else {
-              reject(error)
-            }
-          }
-
-          server.once('error', onError)
-          server.listen(port, '0.0.0.0', () => {
-            server.removeListener('error', onError)
-            log.info({ port }, 'embedded mqtt broker started')
-            resolve()
-          })
-        })
-      }
-      catch (error) {
-        log.error({ error, port }, 'failed to start embedded mqtt broker, will attempt to connect to existing broker')
-        this.broker = null
-      }
-    }
-    else {
-      log.info('embedded mqtt broker disabled by environment')
+      await this.startEmbeddedBroker(port)
     }
 
     this.client = connect(mqttUrl)
@@ -379,7 +374,7 @@ class MqttRuntime {
       }
 
       if (useTemporarySubscription) {
-        await this.unsubscribeTopicSafely(responseTopic, 'publish failure cleanup')
+        void this.unsubscribeTopicSafely(responseTopic, 'publish failure cleanup')
       }
 
       throw error

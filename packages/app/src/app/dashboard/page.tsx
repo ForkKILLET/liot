@@ -41,8 +41,8 @@ export default async function DashboardPage() {
             <CardTitle>下一步</CardTitle>
           </CardHeader>
           <CardContent className='text-sm text-slate-300 space-y-3'>
-            <p>你还没有设备，点击下方按钮来添加你的第一个设备！</p>
-            <ButtonLink href='/dashboard/devices/new' icon={Plus}>添加设备</ButtonLink>
+            <p>你还没有设备，点击下方按钮来创建你的第一个设备！</p>
+            <ButtonLink href='/dashboard/devices/new' icon={Plus}>创建设备</ButtonLink>
           </CardContent>
         </Card>
       )}

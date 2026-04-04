@@ -16,8 +16,8 @@ export default async function DashboardLayout({
 
   return (
     <SiteShell header={<PageToolbar />}>
-      <div className="flex gap-6">
-        <aside className="hidden shrink-0 md:block">
+      <div className="flex h-full gap-6">
+        <aside className="hidden h-full shrink-0 md:block">
           <DashboardSidebar />
         </aside>
         <main className="flex-1 py-6">

@@ -48,7 +48,7 @@ export function DeviceDeleteButton({
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            <Trash2 className='mr-2 h-4 w-4' />
+            <Trash2 className='h-4 w-4' />
             {isDeleting ? '删除中...' : '确认删除'}
           </Button>
           <Button
@@ -68,7 +68,7 @@ export function DeviceDeleteButton({
       size='sm'
       onClick={() => setShowConfirm(true)}
     >
-      <Trash2 className='mr-2 h-4 w-4' />
+      <Trash2 className='h-4 w-4' />
       删除设备
     </Button>
   )

@@ -3,6 +3,7 @@
 import { Fragment, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/comps/ui/button'
+import { DeviceMessageTypeBadge } from '@/comps/dashboard/device-message-type-badge'
 
 export type MessageRecord = {
   id: number
@@ -45,24 +46,6 @@ function payloadPreview(payload: unknown): string {
     return text
   }
   return `${text.slice(0, 80)}...`
-}
-
-function getMessageTypeBadge(type?: string) {
-  const typeColors: Record<string, string> = {
-    report: 'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50',
-    request: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-900/50',
-    response: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/50',
-    set: 'bg-purple-100 text-purple-900 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-900/50',
-    action: 'bg-cyan-100 text-cyan-900 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-900/50',
-  }
-
-  const color = typeColors[type || 'report'] || typeColors.report
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${color}`}>
-      {type || '-'}
-    </span>
-  )
 }
 
 function getStatusBadge(isWaiting: boolean | undefined, isAbnormal: boolean, abnormalReason?: string) {
@@ -150,7 +133,7 @@ export function DeviceMessageHistory({
                   onClick={() => setExpandedId(expandedId === message.id ? null : message.id)}
                 >
                   <td className='px-4 py-3'>
-                    {getMessageTypeBadge(message.messageType)}
+                    <DeviceMessageTypeBadge type={message.messageType} />
                   </td>
                   <td className='px-4 py-3 font-mono text-xs text-foreground/80'>
                     {message.messageId || '-'}
