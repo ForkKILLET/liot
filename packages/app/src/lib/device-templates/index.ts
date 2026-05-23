@@ -88,6 +88,71 @@ export async function createDeviceTemplate(input: {
   return template
 }
 
+export async function updateDeviceTemplate(id: number, input: {
+  name: string
+  description?: string
+  state: string
+  protocol: string
+}) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error('无效的模板 ID')
+  }
+
+  const [current] = await db
+    .select({ id: schema.deviceTemplates.id })
+    .from(schema.deviceTemplates)
+    .where($.eq(schema.deviceTemplates.id, id))
+    .limit(1)
+
+  if (!current) {
+    throw new Error('设备模板不存在')
+  }
+
+  const name = input.name.trim()
+  if (!name) {
+    throw new Error('模板名称不能为空')
+  }
+
+  const [existing] = await db
+    .select({ id: schema.deviceTemplates.id })
+    .from(schema.deviceTemplates)
+    .where($.eq(schema.deviceTemplates.name, name))
+    .limit(1)
+
+  if (existing && existing.id !== id) {
+    throw new Error('模板名称已存在')
+  }
+
+  const state = parseTemplateJsonObject('state', input.state)
+  const protocol = parseTemplateJsonObject('protocol', input.protocol)
+
+  const candidate = {
+    id,
+    name,
+    description: input.description?.trim() || null,
+    state: state as schema.DeviceState,
+    protocol: protocol as schema.DeviceProtocol,
+  } satisfies schema.DeviceTemplate
+
+  const validation = validateDeviceTemplate(candidate)
+  if (!validation.valid) {
+    throw new Error(validation.errors.join('\n'))
+  }
+
+  const [template] = await db
+    .update(schema.deviceTemplates)
+    .set({
+      name,
+      description: candidate.description,
+      state: candidate.state,
+      protocol: candidate.protocol,
+    })
+    .where($.eq(schema.deviceTemplates.id, id))
+    .returning()
+
+  return template
+}
+
 export async function deleteDeviceTemplate(id: number) {
   const [usage] = await db
     .select({ count: $.count(schema.devices.id) })
@@ -108,4 +173,3 @@ export async function deleteDeviceTemplate(id: number) {
     .delete(schema.deviceTemplates)
     .where($.eq(schema.deviceTemplates.id, id))
 }
-
